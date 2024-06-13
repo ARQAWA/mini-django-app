@@ -30,7 +30,7 @@ ruff-check:
 	@ruff check --preview --fix --unsafe-fixes
 
 mypy:
-	@mypy app
+	@mypy .
 
 linters: ruff-format ruff-check mypy
 
