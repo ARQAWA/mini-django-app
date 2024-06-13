@@ -1,0 +1,11 @@
+name: getgems-async-bot
+services:
+  service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    command: python3 manage.py run-mini-app
+    network_mode: host
