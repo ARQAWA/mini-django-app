@@ -1,4 +1,4 @@
-name: getgems-async-bot
+name: django-mini-app
 services:
   service:
     build:
@@ -7,5 +7,15 @@ services:
     restart: always
     env_file:
       - .env
-    command: python3 manage.py run-mini-app
-    network_mode: host
+    command: make run-django
+    networks:
+      backend_bridge:
+        ipv4_address: 100.102.88.101
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+networks:
+  backend_bridge:
+    external: true

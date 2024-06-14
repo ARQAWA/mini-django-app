@@ -37,34 +37,30 @@ linters: ruff-format ruff-check mypy
 vult:
 	@vulture app
 
-include .env
+django-cache:
+	@python manage.py createcachetable
 
-MIGRATIONS_CH_DIR=./migrations_clickhouse
-ch-migrate-make:
-	@read -p "Enter migration name: " name_; \
-	migrate create -ext sql -dir $(MIGRATIONS_CH_DIR) -seq -digits 6 $$name_
+django-migrate:
+	@python manage.py migrate
 
-ch-migrate-up:
-	@migrate -database $(CLICKHOUSE_MIGRATION_DSN) -path $(MIGRATIONS_CH_DIR) up
+#django-collectstatic:
+	@#python manage.py collectstatic --noinput
 
-ch-migrate-down:
-	@migrate -database $(CLICKHOUSE_MIGRATION_DSN) -path $(MIGRATIONS_CH_DIR) down
+django-init: django-cache django-migrate #django-collectstatic
 
-ch-migrate-force:
-	@read -p "Enter version to force: " vers_; \
-	migrate -database $(CLICKHOUSE_MIGRATION_DSN) -path $(MIGRATIONS_CH_DIR) force $$vers_
+django-create-su:
+	@python3 manage.py createsuperuser
 
-MIGRATIONS_PG_DIR=./migrations_postgres
-pg-migrate-make:
-	@read -p "Enter migration name: " name_; \
-	migrate create -ext sql -dir $(MIGRATIONS_PG_DIR) -seq -digits 6 $$name_
+django-uvicorn-run:
+	@uvicorn "app.core.asgi:application" \
+		--host "0.0.0.0" \
+		--loop uvloop \
+		--http httptools \
+		--lifespan off \
+		--interface asgi3
 
-pg-migrate-up:
-	@migrate -database $(POSTGRES_MIGRATION_DSN) -path "$(MIGRATIONS_PG_DIR)" up
+run-django: django-init django-uvicorn-run
 
-pg-migrate-down:
-	@migrate -database $(POSTGRES_MIGRATION_DSN) -path "$(MIGRATIONS_PG_DIR)" down
-
-pg-migrate-force:
-	@read -p "Enter version to force: " vers_; \
-	migrate -database $(POSTGRES_MIGRATION_DSN) -path "$(MIGRATIONS_PG_DIR)" force $$vers_
+deploy:
+	@echo "Deploying to production"
+	@docker compose down && docker compose up --build -d && docker compose logs --tail=3 -f
