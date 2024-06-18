@@ -1,0 +1,35 @@
+name: my-django-project-tests
+services:
+  redis-test:
+    image: redis:7.2.3-alpine
+    ports:
+      - "59001:6379"
+    networks:
+      - testnet
+
+  postgres-test:
+    image: postgres:16.3-alpine
+    environment:
+      POSTGRES_DB: test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+    networks:
+      - testnet
+
+  test-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-test
+    depends_on:
+      - redis-test
+    env_file:
+      - .env.test
+    volumes:
+      - ./:/app/:ro
+    networks:
+      - testnet
+    command: poetry run pytest tests
+
+networks:
+  testnet:
+    driver: bridge

@@ -75,7 +75,7 @@ class ClickerUser(BaseModel):
     last_passive_earn: float = Field(alias="lastPassiveEarn")
     taps_recover_per_sec: int = Field(alias="tapsRecoverPerSec")
     referral: Referral
-    balance_tickets: int = Field(alias="balanceTickets")
+    balance_tickets: int | None = Field(None, alias="balanceTickets")
     claimed_upgrade_combo_at: Optional[datetime] = Field(alias="claimedUpgradeComboAt", default=None)
     sync_time: float = Field(default_factory=time.time)
 

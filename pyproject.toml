@@ -12,19 +12,22 @@ orjson = "3.10.4"
 pydantic-settings = "^2.2.1"
 sentry-sdk = "^2.3.1"
 uvloop = "^0.19.0"
-aiogram = "^3.7.0"
 django = "^5.0.6"
 django-ninja = "^1.1.0"
 celery = "^5.4.0"
 uvicorn = {extras = ["standard"], version = "^0.30.1"}
 django-cors-headers = "^4.3.1"
 numpy = "^2.0.0"
+redis = "^5.0.6"
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.10.0"
+pytest = "^8.2.2"
+pytest-django = "^4.8.0"
+pytest-asyncio = "^0.23.7"
 ruff = "^0.4.5"
-poetry-plugin-export = "^1.6.0"
+mypy = "^1.10.0"
 django-stubs = "^5.0.2"
+poetry-plugin-export = "^1.6.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -48,11 +51,15 @@ output-format = "concise"
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["I", "ANN", "D", "F", "E", "W", "N", "C90", "PL", "T20", "SLF", "SIM", "TID", "TCH", "PERF", "FURB"]
+select = [
+    "I", "ANN", "D", "F", "E", "W", "N", "C90", "PL",
+    "T20", "SLF", "SIM", "TID", "TCH", "PERF", "FURB"
+]
 ignore = [
     "D100", "D104", "D107", "D203", "D212", "D401", "F403",
     "N805", "ANN101", "ANN102", "ANN401", "PLR", "PLW0603",
 ]
+per-file-ignores = { "tests/*" = ["ANN001", "ANN201", "D103", "PLC2701"] }
 fixable = ["ALL"]
 unfixable = []
 dummy-variable-rgx = "(?x)(^venv/ | ^venv\\.py$)"
@@ -77,5 +84,4 @@ warn_return_any = true
 warn_unreachable = true
 strict_equality = true
 follow_imports = "silent"
-#ignore_missing_imports = true
-#disable_error_code = "import-untyped"
+exclude = 'tests/.*'

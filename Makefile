@@ -20,6 +20,7 @@ poetry-sync:
 
 poetry-export-reqs:
 	@$(call check_sha,requirements.txt,)
+	@$(call check_sha,requirements-dev.txt,--with dev)
 
 sync: poetry-lock poetry-sync poetry-export-reqs
 

@@ -1,5 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class AuthSettings(BaseModel):
+    """Настройки авторизации."""
+
+    token_ttl: int = 60 * 60 * 8
 
 
 class SentrySettings(BaseModel):
@@ -33,13 +39,31 @@ class HamsterSettings(BaseModel):
     user_agent: str
 
 
+class RedisSettings(BaseModel):
+    """Настройки Redis."""
+
+    host: str
+    port: int
+    db: int
+
+    @property
+    def dsn(self) -> str:
+        """Возвращает DSN."""
+        return f"redis://{self.host}:{self.port}/{self.db}"
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
 
-    sentry: SentrySettings
+    is_local: bool = False
+    django_secret_key: str
+    allowed_hosts: str
+    auth: AuthSettings = Field(default_factory=AuthSettings)
+    sentry: SentrySettings | None = None
     postgres: PostgresSettings
+    redis: RedisSettings
     telegram_bot: TelegramSettings
-    hamster: HamsterSettings
+    hamster: HamsterSettings | None = None
 
     model_config = SettingsConfigDict(
         frozen=True,

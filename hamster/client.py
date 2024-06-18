@@ -10,16 +10,18 @@ from hamster.schemas.upgrades_for_buy import Upgrade, UpgradesData
 class HamsterClient:
     """HTTP client for the Hamster API."""
 
-    _headers = {
-        "Authorization": "Bearer " + envs.hamster.token,
-        "Origin": "https://hamsterkombat.io",
-        "Referer": "https://hamsterkombat.io/",
-        "User-Agent": envs.hamster.user_agent,
-        "Pragma": "no-cache",
-        "Cache-Control": "no-cache",
-    }
-
     def __init__(self) -> None:
+        if envs.hamster is None:
+            raise RuntimeError("Hamster API is not configured")
+
+        self._headers = {
+            "Authorization": "Bearer " + envs.hamster.token,
+            "Origin": "https://hamsterkombat.io",
+            "Referer": "https://hamsterkombat.io/",
+            "User-Agent": envs.hamster.user_agent,
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+        }
         self._http = Client(headers=self._headers)
 
     def sync(self) -> ClickerUser | None:
@@ -85,7 +87,10 @@ class HamsterClient:
 
     def buy_upgrade(self, upgrade: Upgrade) -> ClickerUser | None:
         """Buy an upgrade."""
-        print(f"Buying upgrade {upgrade.id}; COST: {upgrade.price:,}; PROFIT: {upgrade.profit_per_hour:,}")  # noqa
+        print(  # noqa
+            f"Buying upgrade {upgrade.id}; LEVEL: {upgrade.level}; "
+            f"COST: {upgrade.price:,}; PROFIT: {upgrade.profit_per_hour:,}"
+        )
 
         response = self._http.post(
             "https://api.hamsterkombat.io/clicker/buy-upgrade",
@@ -94,6 +99,18 @@ class HamsterClient:
                 "timestamp": int(time.time()),
             },
         )
+
+        try:
+            jresponse = response.json()["clickerUser"]
+        except Exception as err:
+            print(err, response.status_code, response.text[:32])  # noqa
+            return None
+
+        return ClickerUser.model_validate(jresponse)
+
+    def claim_combo(self) -> ClickerUser | None:
+        """Claim combo."""
+        response = self._http.post("https://api.hamsterkombat.io/clicker/claim-daily-combo")
 
         try:
             jresponse = response.json()["clickerUser"]

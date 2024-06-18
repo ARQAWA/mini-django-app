@@ -1,7 +1,6 @@
 from decimal import Decimal
 from typing import List, Optional
 
-import numpy
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
@@ -73,26 +72,16 @@ class UpgradesData(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    def get_most_profitable_upgrade(self, current_balance: int) -> Upgrade:
+    def get_most_profitable_upgrades(self) -> list[Upgrade]:
         """Get the most profitable upgrade."""
-        ranked = sorted(
+        return sorted(
             (
                 upg
                 for upg in self.upgrades_for_buy
-                if upg.is_available and not upg.is_expired and upg.profit_per_hour_delta > 0
+                if upg.is_available
+                and not upg.is_expired
+                and upg.profit_per_hour_delta > 0
+                and not upg.cooldown_seconds
             ),
             key=lambda x: x.effective_pphd,
         )
-
-        median_rank = Decimal(numpy.median(numpy.array([upg.effective_pphd for upg in ranked])))
-
-        available = sorted(
-            [upg for upg in ranked if upg.cooldown_seconds is None and upg.effective_pphd <= median_rank],
-            key=lambda x: (x.price // 100_000, x.effective_pphd),
-        )
-
-        for idx, upg in enumerate(available):
-            if current_balance >= upg.price:
-                return available[idx]
-
-        return available[0]

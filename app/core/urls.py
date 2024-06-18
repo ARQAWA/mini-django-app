@@ -1,9 +1,10 @@
-from django.contrib import admin
 from django.urls import path
 
-from app.api import api
+from app.api import init_api
+
+api = init_api()
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # path("admin/", admin.site.urls),
     path("api/", api.urls),
 ]
