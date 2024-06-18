@@ -26,13 +26,20 @@ class TelegramSettings(BaseModel):
     token: str
 
 
+class HamsterSettings(BaseModel):
+    """Настройки Hamster."""
+
+    token: str
+    user_agent: str
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
 
     sentry: SentrySettings
     postgres: PostgresSettings
     telegram_bot: TelegramSettings
-    web_app_url: str
+    hamster: HamsterSettings
 
     model_config = SettingsConfigDict(
         frozen=True,

@@ -61,6 +61,9 @@ django-uvicorn-run:
 
 run-django: django-init django-uvicorn-run
 
+run-hamster:
+	@python3 -m hamster
+
 deploy:
 	@echo "Deploying to production"
 	@docker compose down && docker compose up --build -d && docker compose logs --tail=3 -f
