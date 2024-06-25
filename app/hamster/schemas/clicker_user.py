@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -83,7 +84,7 @@ class ClickerUser(BaseModel):
 
     def __init__(self, **data: Any) -> None:
         super().__init__(**data)
-        print(  # noqa
+        logger.debug(
             f"Balance: {self.balance_coins:,.0f}; "
             f"Energy: {self.available_taps:,}/{self.max_taps:,}; "
             f"Multiplier: {self.earn_per_tap:,};"

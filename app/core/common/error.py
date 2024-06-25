@@ -180,3 +180,6 @@ class ApiError(Exception):
     ) -> "ApiError":
         """Ошибка сервис недоступен."""
         return cls.__create_error(HTTPStatus.SERVICE_UNAVAILABLE, message, details, with_sentry)
+
+
+UNATHORIZED_ERROR = ApiError.unauthorized()

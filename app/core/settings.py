@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "app.users",
     # "corsheaders",
 ]
 
@@ -53,12 +54,28 @@ TEMPLATES = [
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / ".." / "db.sqlite3",
+if envs.postgres:
+    DATABASES = {
+        "default": {
+            "ENGINE": "dj_db_conn_pool.backends.postgresql",
+            "HOST": envs.postgres.host,
+            "PORT": envs.postgres.port,
+            "NAME": envs.postgres.database,
+            "USER": envs.postgres.user,
+            "PASSWORD": envs.postgres.password,
+            "POOL_OPTIONS": {
+                "POOL_SIZE": 8,
+                "MAX_OVERFLOW": 50,
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / ".." / "db.sqlite3",
+        },
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

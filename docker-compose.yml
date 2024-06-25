@@ -16,6 +16,17 @@ services:
         soft: 262144
         hard: 262144
 
+  tg-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - backend_bridge
+    command: make run-tg-bot
+
   hamster-rofl:
     build:
       context: .

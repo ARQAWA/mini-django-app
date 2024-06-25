@@ -14,11 +14,12 @@ sentry-sdk = "^2.3.1"
 uvloop = "^0.19.0"
 django = "^5.0.6"
 django-ninja = "^1.1.0"
-celery = "^5.4.0"
 uvicorn = {extras = ["standard"], version = "^0.30.1"}
-django-cors-headers = "^4.3.1"
 numpy = "^2.0.0"
 redis = "^5.0.6"
+aiogram = "^3.8.0"
+loguru = "^0.7.2"
+django-db-connection-pool = {extras = ["postgresql"], version = "^1.2.5"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
@@ -56,7 +57,7 @@ select = [
     "T20", "SLF", "SIM", "TID", "TCH", "PERF", "FURB"
 ]
 ignore = [
-    "D100", "D104", "D107", "D203", "D212", "D401", "F403",
+    "D100", "D104", "D105", "D107", "D203", "D212", "D401", "F403",
     "N805", "ANN101", "ANN102", "ANN401", "PLR", "PLW0603",
 ]
 per-file-ignores = { "tests/*" = ["ANN001", "ANN201", "D103", "PLC2701"] }
@@ -85,3 +86,11 @@ warn_unreachable = true
 strict_equality = true
 follow_imports = "silent"
 exclude = 'tests/.*'
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "app.core.settings"
+strict_settings = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

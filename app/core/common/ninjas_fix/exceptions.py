@@ -7,7 +7,7 @@ from django.http import HttpRequest, HttpResponse
 from ninja import NinjaAPI
 from ninja.errors import ValidationError
 
-from app.core.error import ApiError
+from app.core.common.error import ApiError
 
 
 def setup_exception_handlers(api: NinjaAPI) -> None:

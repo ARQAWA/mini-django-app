@@ -1,15 +1,17 @@
 import random
 import time
 
-from hamster.client import hamster_client
+from loguru import logger
+
+from app.hamster.client import hamster_client
 
 LAST_SYNC = 0.0
 
 
 def print_exit(message: str, *, timer: float = 10.0) -> None:
-    """Print a message and exit after 10 seconds."""
-    print(message)  # noqa
-    print(f"Going to sleep for {timer} seconds.")  # noqa
+    """logger.debug a message and exit after 10 seconds."""
+    logger.debug(message)
+    logger.debug(f"Going to sleep for {timer} seconds.")
     time.sleep(timer)
 
 
@@ -64,5 +66,13 @@ def run() -> None:  # noqa: C901
             time.sleep(random.randint(0, 5))
 
 
-while True:
-    run()
+if __name__ == "__main__":
+    from asyncio import CancelledError
+    from contextlib import suppress
+
+    from app.core.common.sentry import sentry_init
+
+    with suppress(KeyboardInterrupt, SystemExit, CancelledError):
+        sentry_init()
+        while True:
+            run()

@@ -1,10 +1,11 @@
 import time
 
 from httpx import Client
+from loguru import logger
 
 from app.core.envs import envs
-from hamster.schemas.clicker_user import ClickerUser
-from hamster.schemas.upgrades_for_buy import Upgrade, UpgradesData
+from app.hamster.schemas.clicker_user import ClickerUser
+from app.hamster.schemas.upgrades_for_buy import Upgrade, UpgradesData
 
 
 class HamsterClient:
@@ -26,21 +27,21 @@ class HamsterClient:
 
     def sync(self) -> ClickerUser | None:
         """Sync the user's data."""
-        print(f"Syncing user data...")  # noqa
+        logger.debug("Syncing user data...")
 
         response = self._http.post("https://api.hamsterkombat.io/clicker/sync")
 
         try:
             jresponse = response.json()["clickerUser"]
         except Exception as err:
-            print(err, response.status_code, response.text[:32])  # noqa
+            logger.debug((err, response.status_code, response.text[:32]))
             return None
 
         return ClickerUser.model_validate(jresponse)
 
     def taps(self, clicker: ClickerUser) -> ClickerUser:
         """Tap the hamster."""
-        print(f"Tapping the hamster...")  # noqa
+        logger.debug("Tapping the hamster...")
 
         available_taps = clicker.available_taps
 
@@ -66,28 +67,28 @@ class HamsterClient:
         try:
             jresponse = response.json()["clickerUser"]
         except Exception as err:
-            print(err, response.status_code, response.text[:32])  # noqa
+            logger.debug((err, response.status_code, response.text[:32]))
             return clicker
 
         return ClickerUser.model_validate(jresponse)
 
     def get_upgrades_list(self) -> UpgradesData | None:
         """Get the list of upgrades."""
-        print(f"Fetching upgrades list...")  # noqa
+        logger.debug("Fetching upgrades list...")
 
         response = self._http.post("https://api.hamsterkombat.io/clicker/upgrades-for-buy")
 
         try:
             jresponse = response.json()
         except Exception as err:
-            print(err, response.status_code, response.text[:32])  # noqa
+            logger.debug((err, response.status_code, response.text[:32]))
             return None
 
         return UpgradesData.model_validate(jresponse)
 
     def buy_upgrade(self, upgrade: Upgrade) -> ClickerUser | None:
         """Buy an upgrade."""
-        print(  # noqa
+        logger.debug(
             f"Buying upgrade {upgrade.id}; LEVEL: {upgrade.level}; "
             f"COST: {upgrade.price:,}; PROFIT: {upgrade.profit_per_hour:,}"
         )
@@ -103,7 +104,7 @@ class HamsterClient:
         try:
             jresponse = response.json()["clickerUser"]
         except Exception as err:
-            print(err, response.status_code, response.text[:32])  # noqa
+            logger.debug((err, response.status_code, response.text[:32]))
             return None
 
         return ClickerUser.model_validate(jresponse)
@@ -115,7 +116,7 @@ class HamsterClient:
         try:
             jresponse = response.json()["clickerUser"]
         except Exception as err:
-            print(err, response.status_code, response.text[:32])  # noqa
+            logger.debug((err, response.status_code, response.text[:32]))
             return None
 
         return ClickerUser.model_validate(jresponse)

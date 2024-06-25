@@ -5,7 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AuthSettings(BaseModel):
     """Настройки авторизации."""
 
-    token_ttl: int = 60 * 60 * 8
+    auth_token_ttl: int = 60 * 5
+    access_token_ttl: int = 60 * 60 * 8
+    refresh_token_ttl: int = 60 * 60 * 24 * 14
 
 
 class SentrySettings(BaseModel):
@@ -57,6 +59,7 @@ class Settings(BaseSettings):
 
     is_local: bool = False
     django_secret_key: str
+    django_settings_module: str
     allowed_hosts: str
     auth: AuthSettings = Field(default_factory=AuthSettings)
     sentry: SentrySettings | None = None

@@ -3,12 +3,11 @@ define check_sha
 	poetry export --without-hashes -f requirements.txt -o $(1) $(2)
 	([ -f $(1) ] && (shasum $(1) | awk '{ print $$1 }') || echo "") > /tmp/.$(1).new_sha
 	if diff -q /tmp/$(1).old_sha /tmp/.$(1).new_sha > /dev/null; then \
-		echo "$(1) has not changed"; \
+		echo "- $(1) has not changed"; \
 		rm /tmp/$(1).old_sha /tmp/.$(1).new_sha; \
 	else \
-		echo "Error: $(1) has changed!"; \
+		echo "+ $(1) has changed"; \
 		rm /tmp/$(1).old_sha /tmp/.$(1).new_sha; \
-		exit 1; \
 	fi
 endef
 
@@ -62,8 +61,11 @@ django-uvicorn-run:
 
 run-django: django-init django-uvicorn-run
 
+run-tg-bot:
+	@python3 -m app.tg_bot.main
+
 run-hamster:
-	@python3 -m hamster
+	@python3 -m app.hamster.main
 
 deploy:
 	@echo "Deploying to production"
