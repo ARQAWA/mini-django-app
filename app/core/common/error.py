@@ -183,3 +183,4 @@ class ApiError(Exception):
 
 
 UNATHORIZED_ERROR = ApiError.unauthorized()
+FORBIDDEN_ERROR = ApiError.forbidden()

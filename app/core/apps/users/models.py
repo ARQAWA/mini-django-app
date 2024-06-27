@@ -10,7 +10,6 @@ class Customer(models.Model):
     last_name = models.CharField(max_length=150, null=True, help_text="Last name")
     username = models.CharField(max_length=150, null=True, help_text="Username")
     has_trial = models.BooleanField(default=True, help_text="Has trial")
-    has_banned = models.BooleanField(default=False, db_index=True, help_text="Is banned")
     refresh_token = models.CharField(max_length=256, db_index=True, help_text="Refresh token")
 
     def __str__(self) -> str:
@@ -25,5 +24,4 @@ class Customer(models.Model):
             "first_name": self.first_name,
             "last_name": self.last_name,
             "has_trial": self.has_trial,
-            "has_banned": self.has_banned,
         }
