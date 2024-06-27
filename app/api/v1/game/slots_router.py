@@ -1,9 +1,10 @@
-from ninja.types import DictStrAny
+from typing import Any
 
 from app.core.apps.core.models import Game
 from app.core.apps.games.schemas import SlotModelSchema
 from app.core.common.ninjas_fix.auth_dep import UserHttpRequest
 from app.core.common.ninjas_fix.router import Router
+from app.core.services.slots.slots import SlotsService
 
 router = Router(tags=["slots"])
 
@@ -13,9 +14,10 @@ router = Router(tags=["slots"])
     summary="Получение слотов игры",
     response={200: list[SlotModelSchema]},
 )
-async def get_slots(request: UserHttpRequest, game_hash_name: Game.GAMES_LITERAL) -> DictStrAny:
+async def get_slots(request: UserHttpRequest, game_hash_name: Game.GAMES_LITERAL) -> Any:
     """Получение слотов игры."""
-    return {"game_hash_name": True}
+    result = await SlotsService().all(request.auth.id, game_hash_name)
+    return result
 
 
 # @router.post(

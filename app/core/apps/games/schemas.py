@@ -11,7 +11,6 @@ class InfoModelSchema(ModelSchema):
 
         model = Info
         fields = "__all__"
-        exclude = ("id",)
 
 
 class AccountModelSchema(ModelSchema):

@@ -3,21 +3,21 @@ from typing import TYPE_CHECKING, cast
 
 from django.db import migrations, models
 
+from app.core.apps.core.models import Game
+
 if TYPE_CHECKING:
     from django.apps.registry import Apps
     from django.db.backends.base.schema import BaseDatabaseSchemaEditor
-
-    from app.core.apps.core.models import Game  # noqa: F401
 
 
 def add_initial_game(apps: "Apps", schema_editor: "BaseDatabaseSchemaEditor") -> None:
     """Добавление начальной игры."""
     hash_name = "hamster-kombat"
 
-    game_model = cast("Game", apps.get_model("core", "Game"))
+    game_model = cast(Game, apps.get_model("core", "Game"))
     game_model.objects.create(
         hash_name=hash_name,
-        name=game_model.GAMES_DICT[hash_name],
+        name=Game.GAMES_DICT[hash_name],
         is_active=True,
     )
 
