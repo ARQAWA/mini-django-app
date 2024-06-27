@@ -9,10 +9,10 @@ from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.ninjas_fix.auth_dep import UNATHORIZED_ERROR
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
+from app.core.dj_apps.users.models import Customer
 from app.core.models.user_data import UserData
 from app.core.repositories.tg_auth import TgAuthRepo
 from app.core.repositories.web_auth import WebAuthRepo
-from app.users.models import Customer
 
 
 class WebAuthService(metaclass=SingletonMeta):
