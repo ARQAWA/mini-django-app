@@ -6,14 +6,14 @@ from app.core.models.user_data import UserData
 class Customer(models.Model):
     """Модель покупателя."""
 
-    username = models.CharField(max_length=150, unique=True, db_index=True, help_text="Username")
     first_name = models.CharField(max_length=150, help_text="First name")
-    last_name = models.CharField(max_length=150, null=True, blank=True, help_text="Last name")
+    last_name = models.CharField(max_length=150, null=True, help_text="Last name")
+    username = models.CharField(max_length=150, null=True, help_text="Username")
     is_active = models.BooleanField(default=True, db_index=True, help_text="Is user active")
     refresh_token = models.CharField(max_length=256, db_index=True, help_text="Refresh token")
 
     def __str__(self) -> str:
-        return self.username
+        return str(self.username or self.first_name or self.id)
 
     @property
     def user_obj(self) -> UserData.Dict:

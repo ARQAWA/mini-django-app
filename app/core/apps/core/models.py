@@ -1,3 +1,5 @@
+from typing import Literal
+
 from django.db import models
 
 
@@ -10,3 +12,9 @@ class Game(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    GAMES_LITERAL = Literal["hamster-kombat",]
+
+    GAMES_DICT = {
+        "hamster-kombat": "Hamster Kombat",
+    }

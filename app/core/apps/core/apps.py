@@ -5,4 +5,4 @@ class CoreConfig(AppConfig):
     """Конфигурация приложения."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "app.core.dj_apps.core"
+    name = "app.core.apps.core"

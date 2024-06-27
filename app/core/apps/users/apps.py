@@ -5,4 +5,4 @@ class UsersConfig(AppConfig):
     """Настойки приложения пользователей."""
 
     default_auto_field = "django.db.models.BigAutoField"
-    name = "app.core.dj_apps.users"
+    name = "app.core.apps.users"
