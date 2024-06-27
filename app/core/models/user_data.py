@@ -12,6 +12,8 @@ class UserData(Schema):
     first_name: str
     last_name: str | None = None
     username: str | None = None
+    has_banned: bool
+    has_trial: bool
 
     class Dict(TypedDict):
         """Схема словаря с данными пользователя."""
@@ -20,6 +22,8 @@ class UserData(Schema):
         first_name: str
         last_name: str | None
         username: str | None
+        has_banned: bool
+        has_trial: bool
 
     @staticmethod
     def ninja_result(obj: Dict) -> DictStrAny:
