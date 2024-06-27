@@ -9,6 +9,7 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=150, help_text="First name")
     last_name = models.CharField(max_length=150, null=True, help_text="Last name")
     username = models.CharField(max_length=150, null=True, help_text="Username")
+    has_trial = models.BooleanField(default=True, help_text="Has trial")
     is_active = models.BooleanField(default=True, db_index=True, help_text="Is user active")
     refresh_token = models.CharField(max_length=256, db_index=True, help_text="Refresh token")
 
