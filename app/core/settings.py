@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "app.core.dj_apps.core",
     "app.core.dj_apps.users",
     # "corsheaders",
 ]
