@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from ninja import ModelSchema
 
 from app.core.apps.games.models import Account, Info, Slot
@@ -28,7 +30,9 @@ class AccountModelSchema(ModelSchema):
 class SlotModelSchema(ModelSchema):
     """Схема модели слота."""
 
+    id: int
     account: AccountModelSchema | None = None
+    expired_at: datetime
 
     class Meta:
         """Метаданные схемы."""

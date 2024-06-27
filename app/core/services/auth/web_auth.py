@@ -5,7 +5,6 @@ import orjson
 from ninja.types import DictStrAny
 
 from app.core.apps.users.models import Customer
-from app.core.clients.redis_ import redis_client
 from app.core.common.executors import syncp, synct
 from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.ninjas_fix.auth_dep import UNATHORIZED_ERROR
@@ -19,7 +18,6 @@ class WebAuthService(metaclass=SingletonMeta):
     """Сервис авторизации."""
 
     def __init__(self) -> None:
-        self._redis_client = redis_client
         self._tg_auth_repo = TgAuthRepo()
         self._web_auth_repo = WebAuthRepo()
 
@@ -49,6 +47,7 @@ class WebAuthService(metaclass=SingletonMeta):
 
         access, refresh = await self.__gen_tokens()
         user: Customer = await synct(self.__auth_user)(user_str, refresh)
+        user_str = cast(bytes, await synct(orjson.dumps)(user.user_obj))
         await self._web_auth_repo.set_access_token(access, user_str)
 
         await self._tg_auth_repo.delete_auth_data(user.id, auth_hash.encode())

@@ -1,5 +1,7 @@
 from django.db import models
 
+from app.core.common.db_date import utc_now_plus_month
+
 
 class Info(models.Model):
     """Модель информации."""
@@ -31,7 +33,7 @@ class Slot(models.Model):
     user = models.OneToOneField("users.Customer", on_delete=models.RESTRICT, help_text="User")
     game = models.OneToOneField("core.Game", on_delete=models.RESTRICT, help_text="Game")
     account = models.OneToOneField("games.Account", null=True, on_delete=models.RESTRICT, help_text="Account")
-    expired_at = models.DateTimeField(help_text="Slot expired at")
+    expired_at = models.DateTimeField(default=utc_now_plus_month, db_index=True, help_text="Slot expired at")
 
     def __str__(self) -> str:
         return "Empty Slot" if not self.account else str(self.account)

@@ -20,15 +20,17 @@ redis = "^5.0.6"
 aiogram = "^3.8.0"
 loguru = "^0.7.2"
 django-db-connection-pool = {extras = ["postgresql"], version = "^1.2.5"}
+python-dateutil = "^2.9.0.post0"
 
 [tool.poetry.group.dev.dependencies]
+poetry-plugin-export = "^1.6.0"
 pytest = "^8.2.2"
 pytest-django = "^4.8.0"
 pytest-asyncio = "^0.23.7"
 ruff = "^0.4.5"
 mypy = "^1.10.0"
 django-stubs = "^5.0.2"
-poetry-plugin-export = "^1.6.0"
+types-python-dateutil = "^2.9.0.20240316"
 
 [build-system]
 requires = ["poetry-core"]
