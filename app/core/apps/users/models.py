@@ -1,6 +1,5 @@
 from django.db import models
-
-from app.core.models.user_data import UserData
+from ninja.types import DictStrAny
 
 
 class Customer(models.Model):
@@ -16,7 +15,7 @@ class Customer(models.Model):
         return str(self.username or self.first_name or self.id)
 
     @property
-    def user_obj(self) -> UserData.Dict:
+    def user_obj(self) -> DictStrAny:
         """Получение объекта пользователя."""
         return {
             "id": self.id,

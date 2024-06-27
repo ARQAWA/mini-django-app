@@ -19,14 +19,13 @@ class Schema(NinjaSchema):
             type(
                 f"{cls.__name__}NinjaResponse",
                 (Schema,),
-                {"__annotations__": cls.ninja_result(cls)},
+                {"__annotations__": {"error": None, "result": cls}},
             ),
         )
 
-    @staticmethod
-    def ninja_result(obj: Any) -> DictStrAny:
+    def ninja_result(self) -> DictStrAny:
         """Возвращает результат."""
-        return {"error": None, "result": obj}
+        return {"error": None, "result": self.dict()}
 
 
 class ErrorObject(NinjaSchema):

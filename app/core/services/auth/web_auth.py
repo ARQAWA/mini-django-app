@@ -2,6 +2,7 @@ import asyncio
 from typing import cast
 
 import orjson
+from ninja.types import DictStrAny
 
 from app.core.apps.users.models import Customer
 from app.core.clients.redis_ import redis_client
@@ -10,7 +11,6 @@ from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.ninjas_fix.auth_dep import UNATHORIZED_ERROR
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
-from app.core.models.user_data import UserData
 from app.core.repositories.tg_auth import TgAuthRepo
 from app.core.repositories.web_auth import WebAuthRepo
 
@@ -19,12 +19,11 @@ class WebAuthService(metaclass=SingletonMeta):
     """Сервис авторизации."""
 
     def __init__(self) -> None:
-        self._lock = asyncio.Lock()
         self._redis_client = redis_client
         self._tg_auth_repo = TgAuthRepo()
         self._web_auth_repo = WebAuthRepo()
 
-    async def get_user_by_access(self, access_token: str) -> UserData.Dict:
+    async def get_user_by_access(self, access_token: str) -> DictStrAny:
         """
         Получение пользователя по токену.
 
@@ -35,7 +34,7 @@ class WebAuthService(metaclass=SingletonMeta):
         if user_str is None:
             raise UNATHORIZED_ERROR
 
-        return cast(UserData.Dict, await synct(orjson.loads)(user_str))
+        return cast(DictStrAny, await synct(orjson.loads)(user_str))
 
     async def authorize(self, auth_hash: str) -> tuple[str, str]:
         """
@@ -101,7 +100,7 @@ class WebAuthService(metaclass=SingletonMeta):
         :param refresh: refresh токен
         :return: пользователь
         """
-        user_obj: UserData.Dict = orjson.loads(user_str)
+        user_obj: DictStrAny = orjson.loads(user_str)
         user: Customer
         user, _ = Customer.objects.get_or_create(  # noqa: F841
             id=user_obj["id"],

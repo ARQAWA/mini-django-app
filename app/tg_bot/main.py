@@ -10,7 +10,7 @@ from aiogram.types import (
 from loguru import logger
 
 from app.core.envs import envs
-from app.core.services.tg_auth import TgAuthService
+from app.core.services.auth.tg_auth import TgAuthService
 
 
 class MiniAppHolderBot:
