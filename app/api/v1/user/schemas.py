@@ -1,8 +1,5 @@
-from typing import TypedDict
-
+from ninja import Schema
 from pydantic import Field
-
-from app.core.common.ninjas_fix.renderers import Schema
 
 
 class AuthHashPostBody(Schema):
@@ -22,9 +19,3 @@ class TgAuthResponse(Schema):
 
     access: str = Field(description="Токен доступа")
     refresh: str = Field(description="Токен обновления")
-
-    class Dict(TypedDict):
-        """Типизация ответа авторизации."""
-
-        access: str
-        refresh: str

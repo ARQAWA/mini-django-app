@@ -1,7 +1,6 @@
-from ninja import ModelSchema
+from ninja import ModelSchema, Schema
 
 from app.core.apps.users.models import Customer
-from app.core.common.ninjas_fix.renderers import Schema
 
 
 class CustomerSchema(Schema):

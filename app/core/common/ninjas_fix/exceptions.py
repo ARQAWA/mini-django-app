@@ -46,7 +46,6 @@ def __get_response(
                     "message": message,
                     "details": details,
                 },
-                "result": None,
             },
             default=str,
         ),
