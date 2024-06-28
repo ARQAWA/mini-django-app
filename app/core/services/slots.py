@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast
 
 from app.core.apps.core.models import Payment
-from app.core.apps.games.models import Slot
+from app.core.apps.games.models import Slot, Account
 from app.core.common.db_date import demo_expired, utc_now_plus_month
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
@@ -23,9 +23,9 @@ class SlotsService(metaclass=SingletonMeta):
         self._web_auth_repo = WebAuthRepo()
 
     async def all(
-        self,
-        customer_id: int,
-        game_id: str | None,
+            self,
+            customer_id: int,
+            game_id: str | None,
     ) -> list[Slot]:
         """
         Получение всех слотов пользователя.
@@ -153,8 +153,18 @@ class SlotsService(metaclass=SingletonMeta):
         if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
 
+        account: Account | None = None
         if slot.account is not None:
-            slot.account.delete()
+            account = slot.account
 
+        payment: Payment | None = None
         if slot.payment is not None:
-            slot.payment.delete()
+            payment = slot.payment
+
+        slot.delete()
+
+        if account is not None:
+            account.delete()
+
+        if payment is not None:
+            payment.delete()
