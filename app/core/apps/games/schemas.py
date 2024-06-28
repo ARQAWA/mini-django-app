@@ -3,32 +3,27 @@ from datetime import UTC, datetime
 from ninja import ModelSchema
 from pydantic import Field
 
-from app.core.apps.games.models import Account, Info, Slot
-
-
-class InfoModelSchema(ModelSchema):
-    """Схема модели информации."""
-
-    class Meta:
-        """Метаданные схемы."""
-
-        model = Info
-        fields = "__all__"
+from app.core.apps.games.models import Account, Slot
 
 
 class AccountModelSchema(ModelSchema):
     """Схема модели аккаунта."""
 
-    init_data: str
-    proxy_url: str
-    telegram: InfoModelSchema = Field(alias="info")
-    is_playing: bool = False
+    id: int = Field(description="Идентификатор аккаунта")
+    first_name: str = Field(description="Имя")
+    last_name: str | None = Field(description="Фамилия")
+    username: str | None = Field(description="Логин")
+
+    init_data: str = Field(description="Данные инициализации")
+    proxy_url: str | None = Field(description="URL прокси")
+
+    is_playing: bool = Field(description="Играет ли аккаунт")
 
     class Meta:
         """Метаданные схемы."""
 
         model = Account
-        exclude = ("id", "info", "auth_token")
+        exclude = ("auth_token", "game", "customer")
 
 
 class SlotModelSchema(ModelSchema):

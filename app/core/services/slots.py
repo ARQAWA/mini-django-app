@@ -1,7 +1,4 @@
-from datetime import UTC, datetime
 from typing import cast
-
-from dateutil.relativedelta import relativedelta
 
 from app.core.apps.games.models import Slot
 from app.core.common.executors import synct
@@ -32,19 +29,19 @@ class SlotsService(metaclass=SingletonMeta):
 
     async def add_slot(
         self,
-        user_id: int,
+        customer_id: int,
         game_hash_name: str,
         payment_hash: str | None,
     ) -> Slot:
         """
         Добавление слота.
 
-        :param user_id: идентификатор пользователя
+        :param customer_id: идентификатор пользователя
         :param game_hash_name: хэш игры
         :param payment_hash: хэш платежа
         :return: слот
         """
-        return cast(Slot, await synct(self.__add_slot)(user_id, game_hash_name, payment_hash))
+        return cast(Slot, await synct(self.__add_slot)(customer_id, game_hash_name, payment_hash))
 
     @staticmethod
     @by_transaction
@@ -52,17 +49,16 @@ class SlotsService(metaclass=SingletonMeta):
         """Получение всех слотов пользователя."""
         return list(
             Slot.objects.filter(
-                user_id__exact=customer_id,
-                game__hash_name__exact=game_hash_name,
+                customer_id=customer_id,
+                game_id=game_hash_name,
             ).select_related("account")
         )
 
     @staticmethod
     @by_transaction
-    def __add_slot(user_id: int, game_hash_name: str, payment_hash: str | None) -> Slot:
+    def __add_slot(customer_id: int, game_hash_name: str, payment_hash: str | None) -> Slot:
         """Добавление слота."""
         return Slot.objects.create(
-            user_id=user_id,
+            customer_id=customer_id,
             game_id=game_hash_name,
-            expired_at=datetime.now(UTC) + relativedelta(hours=1),
         )

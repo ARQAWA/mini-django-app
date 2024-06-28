@@ -40,27 +40,28 @@ async def add_slot(
 
 @router.put(
     "/{game_hash_name}/slots/{slot_id}",
-    summary="Обновление слота игры",
+    summary="Привязка/обновление аккаунта в слоте игры",
     response={200: AccountModelSchema},
 )
-async def update_slot(
+async def link_account(
     request: UserHttpRequest,
     body: AccountLinkPutBody,
     game_hash_name: Game.GAMES_LITERAL,
     slot_id: int,
 ) -> Any:
-    """Обновление слота игры."""
+    """Привязка/обновление аккаунта в слоте игры."""
     return await AccountsService().link(request.auth, game_hash_name, slot_id, body.init_data, body.proxy)
 
 
 @router.delete(
     "/{game_hash_name}/slots/{slot_id}",
-    summary="Удаление слота игры",
-    response={200: None},
+    summary="Удаление аккаунта из слота игры",
+    response={201: None},
 )
-async def delete_slot(
+async def delete_account(
     request: UserHttpRequest,
     game_hash_name: Game.GAMES_LITERAL,
     slot_id: int,
 ) -> None:
     """Удаление слота игры."""
+    await AccountsService().unlink(request.auth, game_hash_name, slot_id)

@@ -48,7 +48,7 @@ class WebAuthService(metaclass=SingletonMeta):
         try:
             return await Customer.objects.aget(id=user_id)
         except Customer.DoesNotExist:
-            return None
+            raise UNATHORIZED_ERROR
 
     async def authorize(self, auth_hash: str) -> tuple[str, str]:
         """

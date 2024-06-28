@@ -16,12 +16,7 @@ class Play(models.Model):
     ciphers = models.BigIntegerField(default=0, help_text="Stat Ciphers")
 
     def __str__(self) -> str:
-        return (
-            f"{self.account.slot.user} :"
-            f" [{self.account.slot.game}]"
-            f" {self.account.info} /"
-            f" Balance: {self.balance / 1_000_000:.2f}M"
-        )
+        return f"{self.account} / Balance: {self.balance / 1_000_000:.2f}M"
 
 
 class Network(models.Model):
@@ -35,7 +30,7 @@ class Network(models.Model):
     errors_codes = models.JSONField(default=dict, help_text="Stat Error Codes")
 
     def __str__(self) -> str:
-        return f"{self.account.slot.user} : {self.success_percent:.2f}% ({self.success} / {self.errors})"
+        return f"{self.account.customer} : {self.success_percent:.2f}% ({self.success} / {self.errors})"
 
     def calculate_success_percent(self, save: bool = True) -> None:
         """Расчет процента успешных запросов."""
