@@ -12,56 +12,56 @@ router = Router(tags=["slots"])
 
 
 @router.get(
-    "/{game_hash_name}/slots",
+    "/{game_id}/slots",
     summary="Получение слотов игры",
     response={200: list[SlotModelSchema]},
 )
 async def get_slots(
     request: UserHttpRequest,
-    game_hash_name: Game.GAMES_LITERAL,
+    game_id: Game.GAMES_LITERAL,
 ) -> Any:
     """Получение слотов игры."""
-    return await SlotsService().all(request.auth, game_hash_name)
+    return await SlotsService().all(request.auth, game_id)
 
 
 @router.post(
-    "/{game_hash_name}/slots",
+    "/{game_id}/slots",
     summary="Добавление слота игры",
     response={200: SlotModelSchema},
 )
 async def add_slot(
     request: UserHttpRequest,
-    game_hash_name: Game.GAMES_LITERAL,
+    game_id: Game.GAMES_LITERAL,
     body: SlotCreatePostBody,
 ) -> Any:
     """Добавление слота игры."""
-    return await SlotsService().add_slot(request.auth, game_hash_name, body.payment_hash)
+    return await SlotsService().add_slot(request.auth, game_id, body.payment_hash)
 
 
 @router.put(
-    "/{game_hash_name}/slots/{slot_id}",
+    "/{game_id}/slots/{slot_id}",
     summary="Привязка/обновление аккаунта в слоте игры",
     response={200: AccountModelSchema},
 )
 async def link_account(
     request: UserHttpRequest,
     body: AccountLinkPutBody,
-    game_hash_name: Game.GAMES_LITERAL,
+    game_id: Game.GAMES_LITERAL,
     slot_id: int,
 ) -> Any:
     """Привязка/обновление аккаунта в слоте игры."""
-    return await AccountsService().link(request.auth, game_hash_name, slot_id, body.init_data, body.proxy)
+    return await AccountsService().link(request.auth, game_id, slot_id, body)
 
 
 @router.delete(
-    "/{game_hash_name}/slots/{slot_id}",
+    "/{game_id}/slots/{slot_id}",
     summary="Удаление аккаунта из слота игры",
-    response={201: None},
+    response={200: None},
 )
 async def delete_account(
     request: UserHttpRequest,
-    game_hash_name: Game.GAMES_LITERAL,
+    game_id: Game.GAMES_LITERAL,
     slot_id: int,
 ) -> None:
     """Удаление слота игры."""
-    await AccountsService().unlink(request.auth, game_hash_name, slot_id)
+    await AccountsService().unlink(request.auth, game_id, slot_id)

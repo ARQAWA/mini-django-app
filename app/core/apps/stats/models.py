@@ -4,7 +4,7 @@ from django.db import models
 class Play(models.Model):
     """Модель игровой статистики."""
 
-    account = models.OneToOneField("games.Account", on_delete=models.RESTRICT, help_text="Account")
+    account = models.OneToOneField("games.Account", on_delete=models.CASCADE, help_text="Account")
 
     balance = models.DecimalField(default=0, max_digits=16, decimal_places=6, help_text="Stat Balance")
     pph = models.DecimalField(default=0, max_digits=16, decimal_places=6, help_text="Stat PPH")
@@ -22,7 +22,7 @@ class Play(models.Model):
 class Network(models.Model):
     """Модель сетевой статистики."""
 
-    account = models.OneToOneField("games.Account", on_delete=models.RESTRICT, help_text="Account")
+    account = models.OneToOneField("games.Account", on_delete=models.CASCADE, help_text="Account")
 
     success_percent = models.DecimalField(default=100, max_digits=5, decimal_places=2, help_text="Stat Success Percent")
     success = models.BigIntegerField(default=0, help_text="Stat Success")

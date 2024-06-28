@@ -1,13 +1,18 @@
 import contextlib
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from app.core.apps.games.models import Account, Slot
+from app.core.apps.stats.models import Network as NetworkStats
+from app.core.apps.stats.models import Play as PlayStats
 from app.core.common.error import ApiError
 from app.core.common.executors import synct
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
+
+if TYPE_CHECKING:
+    from app.api.v1.game.schemas import AccountLinkPutBody
 
 
 class ErrorsPhrases(StrEnum):
@@ -24,61 +29,62 @@ class AccountsService(metaclass=SingletonMeta):
     async def link(
         self,
         customer_id: int,
-        game_hash_name: str,
+        game_id: str,
         slot_id: int,
-        init_data: str,
-        proxy: str | None,
+        body: "AccountLinkPutBody",
     ) -> Account:
         """
         Привязка аккаунта к слоту.
 
         :param customer_id: идентификатор пользователя
-        :param game_hash_name: хэш игры
+        :param game_id: хэш игры
         :param slot_id: идентификатор слота
-        :param init_data: данные инициализации
-        :param proxy: прокси
-        :return: хэш аккаунта
+        :param body: данные аккаунта
+        :return: аккаунт
         """
-        return cast(Account, await synct(self.__link)(customer_id, game_hash_name, slot_id, init_data, proxy))
+        return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body))
 
-    async def unlink(self, customer_id: int, game_hash_name: str, slot_id: int) -> None:
+    async def unlink(self, customer_id: int, game_id: str, slot_id: int) -> None:
         """
         Отвязка аккаунта от слота.
 
         :param customer_id: идентификатор пользователя
-        :param game_hash_name: хэш игры
+        :param game_id: хэш игры
         :param slot_id: идентификатор слота
         """
-        await synct(self.__unlink)(customer_id, game_hash_name, slot_id)
+        await synct(self.__unlink)(customer_id, game_id, slot_id)
 
     @staticmethod
     @by_transaction
     def __link(
         customer_id: int,
-        game_hash_name: str,
+        game_id: str,
         slot_id: int,
-        init_data: str,
-        proxy: str | None,
+        body: "AccountLinkPutBody",
     ) -> Account:
         """Привязка аккаунта к слоту."""
-        account, _ = Account.objects.update_or_create(  # noqa: F841
-            tg_id=12345,
+        account, is_created = Account.objects.update_or_create(  # noqa: F841
+            tg_id=body.tg_id,
             customer_id=customer_id,
-            game_id=game_hash_name,
+            game_id=game_id,
             defaults=dict(
-                first_name="First Name",
-                last_name="Last Name",
-                username="Username",
-                init_data=init_data,
-                proxy_url=proxy,
+                first_name=body.first_name,
+                last_name=body.last_name,
+                username=body.username,
+                init_data=body.init_data,
+                proxy_url=body.proxy,
             ),
         )
+
+        if is_created:
+            PlayStats.objects.create(account=account)
+            NetworkStats.objects.create(account=account)
 
         try:
             slot = Slot.objects.select_related("account").get(
                 id=slot_id,
                 customer_id=customer_id,
-                game_id=game_hash_name,
+                game_id=game_id,
             )
         except Slot.DoesNotExist:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
@@ -87,7 +93,7 @@ class AccountsService(metaclass=SingletonMeta):
         with contextlib.suppress(Slot.DoesNotExist):
             another_slot = Slot.objects.exclude(id=slot_id).get(
                 customer_id=customer_id,
-                game_id=game_hash_name,
+                game_id=game_id,
                 account_id=account.id,
             )
             if another_slot.expired_at <= datetime.now(UTC):
@@ -105,7 +111,7 @@ class AccountsService(metaclass=SingletonMeta):
     @by_transaction
     def __unlink(
         customer_id: int,
-        game_hash_name: str,
+        game_id: str,
         slot_id: int,
     ) -> None:
         """Отвязка аккаунта от слота."""
@@ -113,7 +119,7 @@ class AccountsService(metaclass=SingletonMeta):
             slot = Slot.objects.get(
                 id=slot_id,
                 customer_id=customer_id,
-                game_id=game_hash_name,
+                game_id=game_id,
             )
             if slot.account is not None:
                 slot.account = None

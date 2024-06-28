@@ -9,15 +9,15 @@ from app.core.apps.games.models import Account, Slot
 class AccountModelSchema(ModelSchema):
     """Схема модели аккаунта."""
 
-    tg_id: int = Field(description="Идентификатор аккаунта")
-    first_name: str = Field(description="Имя")
-    last_name: str | None = Field(description="Фамилия")
-    username: str | None = Field(description="Логин")
+    tg_id: int = Field(title="Telegram ID")
+    first_name: str = Field(title="Имя")
+    last_name: str | None = Field(title="Фамилия")
+    username: str | None = Field(title="Username")
 
-    init_data: str = Field(description="Данные инициализации")
-    proxy_url: str | None = Field(description="URL прокси")
+    init_data: str = Field(title="Данные инициализации")
+    proxy_url: str | None = Field(title="URL прокси")
 
-    is_playing: bool = Field(description="Играет ли аккаунт")
+    is_playing: bool = Field(title="Играет ли аккаунт")
 
     class Meta:
         """Метаданные схемы."""

@@ -10,14 +10,14 @@ from pydantic import Field
 class ErrorObject(NinjaSchema):
     """Схема ошибки."""
 
-    message: str = Field(description="Сообщение об ошибке")
-    details: Any = Field(description="Детали ошибки")
+    message: str = Field(title="Сообщение об ошибке")
+    details: Any = Field(title="Детали ошибки")
 
 
 class ErrorResponse(NinjaSchema):
     """Схема ответа с ошибкой."""
 
-    error: ErrorObject = Field(description="Объект ошибки")
+    error: ErrorObject = Field(title="Объект ошибки")
 
 
 class ORJSONResponseRenderer(BaseRenderer):
