@@ -51,7 +51,7 @@ class SlotsService(metaclass=SingletonMeta):
             Slot.objects.filter(
                 customer_id=customer_id,
                 game_id=game_id,
-            ).select_related("account")
+            ).select_related("account", "account__play", "account__network")
         )
 
     @staticmethod

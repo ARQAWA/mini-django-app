@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 from typing import TYPE_CHECKING, cast
 
 import orjson
@@ -132,10 +133,10 @@ class WebAuthService(metaclass=SingletonMeta):
         :param refresh_new: новый refresh токен
         :return: пользователь
         """
-        try:
+        # noinspection PyTypeChecker
+        with contextlib.suppress(Customer.DoesNotExist):
             user = Customer.objects.get(refresh_token=refresh_old.decode())
             user.refresh_token = refresh_new.decode()
             user.save()
             return user
-        except Customer.DoesNotExist:
-            return None
+        return None

@@ -18,3 +18,9 @@ class AccountLinkPutBody(Schema):
 
     init_data: str = Field(title="Инициализационные данные")
     proxy: str | None = Field(title="Прокси")
+
+
+class AccountSwitchPlayPostBody(Schema):
+    """Схема для запуска/остановки аккаунта в слоте игры."""
+
+    play: bool = Field(title="Запустить/остановить аккаунт")
