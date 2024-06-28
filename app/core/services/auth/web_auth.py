@@ -1,8 +1,7 @@
 import asyncio
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import orjson
-from ninja.types import DictStrAny
 
 from app.core.apps.users.models import Customer
 from app.core.common.executors import syncp, synct
@@ -13,6 +12,9 @@ from app.core.common.threaded_transaction import by_transaction
 from app.core.repositories.tg_auth import TgAuthRepo
 from app.core.repositories.web_auth import WebAuthRepo
 
+if TYPE_CHECKING:
+    from ninja.types import DictStrAny
+
 
 class WebAuthService(metaclass=SingletonMeta):
     """Сервис авторизации."""
@@ -21,18 +23,19 @@ class WebAuthService(metaclass=SingletonMeta):
         self._tg_auth_repo = TgAuthRepo()
         self._web_auth_repo = WebAuthRepo()
 
-    async def get_user_by_access(self, access_token: str) -> DictStrAny:
+    async def get_user_id_by_access(self, access_token: str) -> int | None:
         """
         Получение пользователя по токену.
 
         :param access_token: access токен
         :return: данные пользователя
         """
-        user_str = await self._web_auth_repo.get_user_by_access_token(access_token.encode())
-        if user_str is None:
-            raise UNATHORIZED_ERROR
+        res = await self._web_auth_repo.get_user_by_access_token(access_token.encode())
 
-        return cast(DictStrAny, await synct(orjson.loads)(user_str))
+        if res is None or not res.isdigit():
+            return None
+
+        return int(res)
 
     async def authorize(self, auth_hash: str) -> tuple[str, str]:
         """
