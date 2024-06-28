@@ -37,6 +37,19 @@ class WebAuthService(metaclass=SingletonMeta):
 
         return int(res)
 
+    @staticmethod
+    async def get_user_by_id(user_id: int) -> Customer | None:
+        """
+        Получение пользователя по идентификатору.
+
+        :param user_id: идентификатор пользователя
+        :return: пользователь
+        """
+        try:
+            return await Customer.objects.aget(id=user_id)
+        except Customer.DoesNotExist:
+            return None
+
     async def authorize(self, auth_hash: str) -> tuple[str, str]:
         """
         Авторизация пользователя.
@@ -50,9 +63,7 @@ class WebAuthService(metaclass=SingletonMeta):
 
         access, refresh = await self.__gen_tokens()
         user: Customer = await synct(self.__auth_user)(user_str, refresh)
-        user_str = cast(bytes, await synct(orjson.dumps)(user.user_obj))
-        await self._web_auth_repo.set_access_token(access, user_str)
-
+        await self._web_auth_repo.set_access_token(access, user.id)
         await self._tg_auth_repo.delete_auth_data(user.id, auth_hash.encode())
 
         return access.decode(), refresh.decode()
@@ -64,19 +75,16 @@ class WebAuthService(metaclass=SingletonMeta):
         :param refresh_token: refresh токен
         :return: access, refresh токены
         """
-        refresh_str = refresh_token.encode()
-
-        is_blocked = await self._web_auth_repo.is_blocked(refresh_str)
+        is_blocked = await self._web_auth_repo.is_blocked(refresh_str := refresh_token.encode())
         if is_blocked:
             raise UNATHORIZED_ERROR
 
         access, refresh = await self.__gen_tokens()
-        user = await synct(self.__update_refresh_token)(refresh_str, refresh)
+        user: Customer = await synct(self.__update_refresh_token)(refresh_str, refresh)
         if user is None:
             raise UNATHORIZED_ERROR
 
-        user_str = await synct(orjson.dumps)(user.user_obj)
-        await self._web_auth_repo.set_access_token(access, user_str)
+        await self._web_auth_repo.set_access_token(access, user.id)
         await self._web_auth_repo.block_refresh_token(refresh_str)
 
         return access.decode(), refresh.decode()
@@ -103,18 +111,15 @@ class WebAuthService(metaclass=SingletonMeta):
         :return: пользователь
         """
         user_obj: DictStrAny = orjson.loads(user_str)
-        user: Customer
-        user, _ = Customer.objects.get_or_create(  # noqa: F841
+        user, _ = Customer.objects.update_or_create(  # noqa: F841
             id=user_obj["id"],
             defaults=dict(
                 first_name=user_obj["first_name"],
                 last_name=user_obj["last_name"],
                 username=user_obj["username"],
-                refresh_token="__temp__",
+                refresh_token=refresh.decode(),
             ),
         )
-        user.refresh_token = refresh.decode()
-        user.save()
         return user
 
     @staticmethod
@@ -127,7 +132,6 @@ class WebAuthService(metaclass=SingletonMeta):
         :param refresh_new: новый refresh токен
         :return: пользователь
         """
-        user: Customer
         try:
             user = Customer.objects.get(refresh_token=refresh_old.decode())
             user.refresh_token = refresh_new.decode()

@@ -13,11 +13,6 @@ class UserHttpRequest(DjangoHttpRequest):
 
     auth: int
 
-    @property
-    def user_id(self) -> int:
-        """Получение идентификатора пользователя."""
-        return self.auth
-
 
 class UserAuthDepends:
     """Класс для получения объекта пользователя из токена."""

@@ -18,7 +18,7 @@ router = Router(tags=["auth"])
 )
 async def get_user_info(request: UserHttpRequest) -> Any:
     """Ручка для получения информации о текущем пользователе."""
-    return request.auth
+    return await WebAuthService().get_user_by_id(request.auth)
 
 
 @router.post(
