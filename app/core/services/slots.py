@@ -101,12 +101,15 @@ class SlotsService(metaclass=SingletonMeta):
         if body.is_demo:
             if Slot.objects.select_for_update().filter(customer_id=cid, game_id=gid).exists():
                 raise ApiError.not_acceptable(ErrorsPhrases.DEMO_SLOT_NOT_AVAILABLE)
+
             payment_id = sync_get_rand_string(64).decode()
             payment = Payment.objects.create(id=payment_id, amount=0, is_payed=True, type=Payment.Type.DEMO.value)
+
             return Slot.objects.create(customer_id=cid, game_id=gid, payment=payment, expired_at=demo_expired())
 
         payment_id = cast(str, body.payment_hash)
         payment = Payment.objects.create(id=payment_id, amount=0, is_payed=False, type=Payment.Type.TON.value)
+
         if body.slot_id is not None:
             slot: Slot | None = (
                 Slot.objects.select_for_update()
@@ -122,6 +125,7 @@ class SlotsService(metaclass=SingletonMeta):
 
             slot.payment = payment
             slot.expired_at = utc_now_plus_month()
+
             slot.save()
             return slot
 
@@ -132,8 +136,10 @@ class SlotsService(metaclass=SingletonMeta):
     def __get_checked_slot(cid: int, gid: str, sid: int) -> Slot:
         """Получение слота с проверкой."""
         slot: Slot | None = Slot.objects.filter(id=sid, customer_id=cid, game_id=gid).first()
+
         if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
+
         return slot
 
     @staticmethod
@@ -141,11 +147,9 @@ class SlotsService(metaclass=SingletonMeta):
     def __delete_slot(cid: int, gid: str, sid: int) -> None:
         """Удаление слота."""
         slot: Slot | None = (
-            Slot.objects.select_for_update()
-            .select_related("account", "payment")
-            .filter(id=sid, customer_id=cid, game_id=gid)
-            .first()
+            Slot.objects.select_related("account", "payment").filter(id=sid, customer_id=cid, game_id=gid).first()
         )
+
         if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
 
