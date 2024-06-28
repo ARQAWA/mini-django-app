@@ -1,6 +1,6 @@
 from ninja import ModelSchema
 
-from app.core.apps.users.models import Customer
+from app.core.apps.core.models import Customer
 
 
 class CustomerModelSchema(ModelSchema):

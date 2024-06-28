@@ -34,4 +34,4 @@ async def add_slot(
     body: SlotCreatePostBody,
 ) -> Any:
     """Добавление слота игры."""
-    return await SlotsService().add_slot(request.auth, game_id, body.payment_hash)
+    return await SlotsService().add_slot(request.auth, game_id, body)

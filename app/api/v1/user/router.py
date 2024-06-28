@@ -3,7 +3,7 @@ from typing import Any
 from django.http import HttpRequest
 
 from app.api.v1.user.schemas import AuthHashPostBody, RefreshTokenPostBody, TgAuthResponse
-from app.core.apps.users.schemas import CustomerModelSchema
+from app.core.apps.core.schemas import CustomerModelSchema
 from app.core.common.ninjas_fix.auth_dep import UserHttpRequest
 from app.core.common.ninjas_fix.router import Router
 from app.core.services.web_auth import WebAuthService

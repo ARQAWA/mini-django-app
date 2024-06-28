@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, cast
 
 import orjson
 
-from app.core.apps.users.models import Customer
+from app.core.apps.core.models import Customer
 from app.core.common.executors import syncp, synct
 from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.ninjas_fix.auth_dep import UNATHORIZED_ERROR

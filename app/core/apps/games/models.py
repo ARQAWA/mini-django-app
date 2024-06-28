@@ -19,7 +19,7 @@ class Account(models.Model):
     auth_token = models.CharField(max_length=2048, null=True, help_text="Auth token")
 
     game = models.ForeignKey("core.Game", on_delete=models.RESTRICT, help_text="Game")
-    customer = models.ForeignKey("users.Customer", on_delete=models.RESTRICT, help_text="User")
+    customer = models.ForeignKey("core.Customer", on_delete=models.RESTRICT, help_text="User")
 
     class Meta:
         """Метаинформация модели."""
@@ -34,16 +34,14 @@ class Slot(models.Model):
     """Модель слота."""
 
     game = models.ForeignKey("core.Game", on_delete=models.RESTRICT, help_text="Game")
-    customer = models.ForeignKey("users.Customer", on_delete=models.RESTRICT, help_text="User")
+    customer = models.ForeignKey("core.Customer", on_delete=models.RESTRICT, help_text="User")
+
     account = models.OneToOneField(
-        "games.Account",
-        null=True,
-        on_delete=models.SET_NULL,
-        help_text="Account",
-        related_name="slot",
+        "games.Account", null=True, on_delete=models.SET_NULL, help_text="Account", related_name="slot"
     )
+
+    payment = models.OneToOneField("core.Payment", on_delete=models.RESTRICT, help_text="Payment", related_name="slot")
     expired_at = models.DateTimeField(default=utc_now_plus_month, db_index=True, help_text="Slot expired at")
-    is_payed = models.BooleanField(default=False, help_text="Is slot payed")
 
     def __str__(self) -> str:
         return "Empty Slot" if not self.account else str(self.account)
