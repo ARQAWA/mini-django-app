@@ -20,4 +20,4 @@ class CustomerModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Customer
-        fields = ["id", "first_name", "last_name", "username", "has_trial"]
+        fields = ["id", "first_name", "last_name", "username"]
