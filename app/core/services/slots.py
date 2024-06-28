@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, cast
 
 from app.core.apps.core.models import Payment
-from app.core.apps.games.models import Slot, Account
+from app.core.apps.games.models import Account, Slot
 from app.core.common.db_date import demo_expired, utc_now_plus_month
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
@@ -23,9 +23,9 @@ class SlotsService(metaclass=SingletonMeta):
         self._web_auth_repo = WebAuthRepo()
 
     async def all(
-            self,
-            customer_id: int,
-            game_id: str | None,
+        self,
+        customer_id: int,
+        game_id: str | None,
     ) -> list[Slot]:
         """
         Получение всех слотов пользователя.
