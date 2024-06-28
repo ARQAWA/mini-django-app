@@ -52,7 +52,7 @@ async def check_payment(
 
 
 @router.delete(
-    "/{game_id}/slots/{slot_id}",
+    "/{game_id}/service_route/slots/{slot_id}",
     summary="Удаление слота игры",
     response={200: None},
 )
