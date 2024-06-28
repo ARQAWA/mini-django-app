@@ -21,7 +21,7 @@ async def get_slots(
     game_hash_name: Game.GAMES_LITERAL,
 ) -> Any:
     """Получение слотов игры."""
-    return await SlotsService().all(request.auth.id, game_hash_name)
+    return await SlotsService().all(request.auth, game_hash_name)
 
 
 @router.post(
@@ -35,7 +35,7 @@ async def add_slot(
     body: SlotCreatePostBody,
 ) -> Any:
     """Добавление слота игры."""
-    return await SlotsService().add_slot(request.auth.id, game_hash_name, body.payment_hash)
+    return await SlotsService().add_slot(request.auth, game_hash_name, body.payment_hash)
 
 
 @router.put(
@@ -50,7 +50,7 @@ async def update_slot(
     slot_id: int,
 ) -> Any:
     """Обновление слота игры."""
-    return await AccountsService().link(request.auth.id, game_hash_name, slot_id, body.init_data, body.proxy)
+    return await AccountsService().link(request.auth, game_hash_name, slot_id, body.init_data, body.proxy)
 
 
 @router.delete(

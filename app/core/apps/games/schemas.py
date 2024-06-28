@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from ninja import ModelSchema
+from pydantic import Field
 
 from app.core.apps.games.models import Account, Info, Slot
 
@@ -18,13 +19,16 @@ class InfoModelSchema(ModelSchema):
 class AccountModelSchema(ModelSchema):
     """Схема модели аккаунта."""
 
-    info: InfoModelSchema
+    init_data: str
+    proxy_url: str
+    telegram: InfoModelSchema = Field(alias="info")
+    is_playing: bool = False
 
     class Meta:
         """Метаданные схемы."""
 
         model = Account
-        exclude = ("id",)
+        exclude = ("id", "info", "auth_token")
 
 
 class SlotModelSchema(ModelSchema):
@@ -32,10 +36,15 @@ class SlotModelSchema(ModelSchema):
 
     id: int
     account: AccountModelSchema | None = None
-    expired_at: datetime
+    is_expired: bool
+
+    @staticmethod
+    def resolve_is_expired(obj: Slot) -> bool:
+        """Получение информации о просроченности слота."""
+        return obj.expired_at <= datetime.now(UTC)
 
     class Meta:
         """Метаданные схемы."""
 
         model = Slot
-        fields = ("id", "account", "expired_at")
+        fields = ("id", "account")

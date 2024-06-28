@@ -20,6 +20,7 @@ class Account(models.Model):
 
     init_data = models.CharField(max_length=4096, help_text="Init data")
     proxy_url = models.CharField(max_length=2048, help_text="Proxy URL")
+    auth_token = models.CharField(max_length=2048, help_text="Auth token", null=True)
     info = models.OneToOneField("games.Info", on_delete=models.RESTRICT, help_text="Info")
     is_playing = models.BooleanField(help_text="Is account playing", default=False)
 
