@@ -43,6 +43,7 @@ class Slot(models.Model):
         related_name="slot",
     )
     expired_at = models.DateTimeField(default=utc_now_plus_month, db_index=True, help_text="Slot expired at")
+    is_payed = models.BooleanField(default=False, help_text="Is slot payed")
 
     def __str__(self) -> str:
         return "Empty Slot" if not self.account else str(self.account)

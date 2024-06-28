@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 from ninja import ModelSchema
 from pydantic import Field
@@ -35,15 +35,11 @@ class SlotModelSchema(ModelSchema):
 
     id: int
     account: AccountModelSchema | None = None
-    is_expired: bool
-
-    @staticmethod
-    def resolve_is_expired(obj: Slot) -> bool:
-        """Получение информации о просроченности слота."""
-        return obj.expired_at <= datetime.now(UTC)
+    expired_at: datetime
+    is_payed: bool
 
     class Meta:
         """Метаданные схемы."""
 
         model = Slot
-        fields = ("id", "account")
+        fields = ("id", "account", "is_payed", "expired_at")
