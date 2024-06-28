@@ -9,7 +9,7 @@ from app.core.apps.games.models import Account, Slot
 class AccountModelSchema(ModelSchema):
     """Схема модели аккаунта."""
 
-    id: int = Field(description="Идентификатор аккаунта")
+    tg_id: int = Field(description="Идентификатор аккаунта")
     first_name: str = Field(description="Имя")
     last_name: str | None = Field(description="Фамилия")
     username: str | None = Field(description="Логин")
@@ -23,7 +23,7 @@ class AccountModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Account
-        exclude = ("auth_token", "game", "customer")
+        exclude = ("id", "auth_token", "game", "customer")
 
 
 class SlotModelSchema(ModelSchema):
