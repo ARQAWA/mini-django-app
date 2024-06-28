@@ -75,6 +75,17 @@ class AccountsService(metaclass=SingletonMeta):
         """
         return cast(Account, await synct(self.__switch)(customer_id, game_id, slot_id, play))
 
+    async def reset(self, customer_id: int, game_id: str, slot_id: int) -> Account:
+        """
+        Сброс статистики аккаунта в слоте игры.
+
+        :param customer_id: идентификатор пользователя
+        :param game_id: идентификатор игры
+        :param slot_id: идентификатор слота
+        :return: аккаунт.
+        """
+        return cast(Account, await synct(self.__reset)(customer_id, game_id, slot_id))
+
     @staticmethod
     @by_transaction
     def __link(
@@ -158,5 +169,27 @@ class AccountsService(metaclass=SingletonMeta):
         if account.is_playing != play:
             account.is_playing = play
             account.save()
+
+        return account
+
+    @staticmethod
+    @by_transaction
+    def __reset(customer_id: int, game_id: str, slot_id: int) -> Account:
+        """Сброс статистики аккаунта в слоте игры."""
+        account: Account | None = (
+            Account.objects.filter(
+                slot=slot_id,
+                customer_id=customer_id,
+                game_id=game_id,
+            )
+            .select_related("play", "network")
+            .first()
+        )
+
+        if account is None:
+            raise ApiError.failed_dependency(ErrorsPhrases.ACCOUNT_NOT_FOUND)
+
+        account.play.reset()
+        account.network.reset()
 
         return account

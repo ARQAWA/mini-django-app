@@ -39,7 +39,7 @@ async def delete_account(
     await AccountsService().unlink(request.auth, game_id, slot_id)
 
 
-@router.post(
+@router.patch(
     "/{game_id}/slots/{slot_id}/activate",
     summary="Запуск/остановка работы аккаунта в слоте игры",
     response={200: AccountModelSchema},
@@ -52,3 +52,17 @@ async def switch_account(
 ) -> Any:
     """Запуск/остановка работы аккаунта в слоте игры."""
     return await AccountsService().switch(request.auth, game_id, slot_id, body.play)
+
+
+@router.patch(
+    "/{game_id}/slots/{slot_id}/reset",
+    summary="Сброс статистики аккаунта в слоте игры",
+    response={200: AccountModelSchema},
+)
+async def reset_account(
+    request: UserHttpRequest,
+    game_id: Game.GAMES_LITERAL,
+    slot_id: int,
+) -> Any:
+    """Сброс статистики аккаунта в слоте игры."""
+    return await AccountsService().reset(request.auth, game_id, slot_id)

@@ -6,7 +6,7 @@ from app.api.v1.user.schemas import AuthHashPostBody, RefreshTokenPostBody, TgAu
 from app.core.apps.users.schemas import CustomerModelSchema
 from app.core.common.ninjas_fix.auth_dep import UserHttpRequest
 from app.core.common.ninjas_fix.router import Router
-from app.core.services.auth.web_auth import WebAuthService
+from app.core.services.web_auth import WebAuthService
 
 router = Router(tags=["auth"])
 

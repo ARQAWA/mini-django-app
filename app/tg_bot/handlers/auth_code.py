@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from app.core.envs import envs
-from app.core.services.auth.tg_auth import TgAuthService
+from app.core.services.tg_auth import TgAuthService
 from app.tg_bot.utils.cycler import send_loop
 
 

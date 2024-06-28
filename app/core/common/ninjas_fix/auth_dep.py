@@ -3,7 +3,7 @@ from django.http import HttpRequest as DjangoHttpRequest
 from ninja.security.base import SecuritySchema
 
 from app.core.common.error import UNATHORIZED_ERROR
-from app.core.services.auth.web_auth import WebAuthService
+from app.core.services.web_auth import WebAuthService
 
 SECURITY_SCHEMA = SecuritySchema(type="http", scheme="bearer")
 
