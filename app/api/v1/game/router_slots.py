@@ -55,6 +55,7 @@ async def check_payment(
     "/{game_id}/service_route/slots/{slot_id}",
     summary="Удаление слота игры",
     response={200: None},
+    deprecated=True,
 )
 async def delete_slot(
     request: UserHttpRequest,
