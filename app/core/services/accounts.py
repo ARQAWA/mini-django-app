@@ -1,4 +1,3 @@
-import contextlib
 from enum import StrEnum
 from typing import TYPE_CHECKING, cast
 
@@ -85,7 +84,7 @@ class AccountsService(metaclass=SingletonMeta):
         body: "AccountLinkPutBody",
     ) -> Account:
         """Привязка аккаунта к слоту."""
-        account, is_created = Account.objects.update_or_create(  # noqa: F841
+        account, is_created = Account.objects.update_or_create(
             tg_id=body.tg_id,
             customer_id=customer_id,
             game_id=game_id,
@@ -102,14 +101,13 @@ class AccountsService(metaclass=SingletonMeta):
             PlayStats.objects.create(account=account)
             NetworkStats.objects.create(account=account)
 
-        try:
-            slot = Slot.objects.select_related("account").get(id=slot_id, customer_id=customer_id, game_id=game_id)
-        except Slot.DoesNotExist:
+        slot: Slot | None = Slot.objects.filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
+
+        if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
 
-        # noinspection PyTypeChecker
-        with contextlib.suppress(Slot.DoesNotExist):
-            another_slot = Slot.objects.exclude(id=slot_id).get(account_id=account.id)
+        another_slot: Slot | None = Slot.objects.exclude(id=account.id).filter(account_id=account.id).first()
+        if another_slot is not None:
             another_slot.account = None
             another_slot.save()
 
