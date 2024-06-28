@@ -1,5 +1,4 @@
 from django.db import models
-from ninja.types import DictStrAny
 
 
 class Customer(models.Model):
@@ -8,19 +7,7 @@ class Customer(models.Model):
     first_name = models.CharField(max_length=150, help_text="First name")
     last_name = models.CharField(max_length=150, null=True, help_text="Last name")
     username = models.CharField(max_length=150, null=True, help_text="Username")
-    has_trial = models.BooleanField(default=True, help_text="Has trial")
     refresh_token = models.CharField(max_length=256, db_index=True, help_text="Refresh token")
 
     def __str__(self) -> str:
         return str(self.username or self.first_name or self.id)
-
-    @property
-    def user_obj(self) -> DictStrAny:
-        """Получение объекта пользователя."""
-        return {
-            "id": self.id,
-            "username": self.username,
-            "first_name": self.first_name,
-            "last_name": self.last_name,
-            "has_trial": self.has_trial,
-        }

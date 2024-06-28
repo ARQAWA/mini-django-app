@@ -1,16 +1,6 @@
-from ninja import ModelSchema, Schema
+from ninja import ModelSchema
 
 from app.core.apps.users.models import Customer
-
-
-class CustomerSchema(Schema):
-    """Схема с данными покупателя."""
-
-    id: int
-    first_name: str
-    last_name: str | None
-    username: str | None
-    has_trial: bool
 
 
 class CustomerModelSchema(ModelSchema):
