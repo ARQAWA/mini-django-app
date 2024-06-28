@@ -2,7 +2,7 @@ from typing import Literal
 
 from django.db import models
 
-from app.core.common.model_enum import ModelEnum
+from app.core.common.enums import ModelEnum
 
 
 class Game(models.Model):

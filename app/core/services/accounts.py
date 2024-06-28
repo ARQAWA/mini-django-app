@@ -1,9 +1,9 @@
-from enum import StrEnum
 from typing import TYPE_CHECKING, cast
 
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.models import Network as NetworkStats
 from app.core.apps.stats.models import Play as PlayStats
+from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
 from app.core.common.executors import synct
 from app.core.common.singleton import SingletonMeta
@@ -11,15 +11,6 @@ from app.core.common.threaded_transaction import by_transaction
 
 if TYPE_CHECKING:
     from app.api.v1.game.schemas import AccountLinkPutBody
-
-
-class ErrorsPhrases(StrEnum):
-    """Строки ошибок."""
-
-    SLOT_NOT_FOUND = "SLOT_NOT_FOUND"  # слот не найден
-    ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND"  # аккаунт не найден
-    ANOTHER_USER_LINKED = "ANOTHER_USER_LINKED"  # аккаунт уже привязан к другому пользователю
-    ANOTHER_SLOT_LINKED = "ANOTHER_SLOT_LINKED"  # аккаунт уже привязан к другому слоту
 
 
 class AccountsService(metaclass=SingletonMeta):
