@@ -1,9 +1,11 @@
 from typing import TYPE_CHECKING, cast
 
+from app.core.apps.core.models import Payment
 from app.core.apps.games.models import Slot
 from app.core.common.db_date import demo_expired
 from app.core.common.error import ApiError
 from app.core.common.executors import synct
+from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 from app.core.repositories.web_auth import WebAuthRepo
@@ -61,5 +63,7 @@ class SlotsService(metaclass=SingletonMeta):
         if body.is_demo:
             if Slot.objects.select_for_update().filter(customer_id=cid, game_id=gid).exists():
                 raise ApiError.not_acceptable("Demo slot creation is not allowed")
-            return Slot.objects.create(customer_id=cid, game_id=gid, expired_at=demo_expired())
+            payment_id = sync_get_rand_string(64).decode()
+            payment = Payment.objects.create(id=payment_id, amount=0, is_payed=True, type=Payment.Type.DEMO.value)
+            return Slot.objects.create(customer_id=cid, game_id=gid, payment=payment, expired_at=demo_expired())
         return Slot.objects.create(customer_id=cid, game_id=gid)

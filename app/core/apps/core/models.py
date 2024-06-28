@@ -2,6 +2,8 @@ from typing import Literal
 
 from django.db import models
 
+from app.core.common.model_enum import ModelEnum
+
 
 class Game(models.Model):
     """Модель игры."""
@@ -23,7 +25,14 @@ class Game(models.Model):
 class Payment(models.Model):
     """Модель платежа."""
 
+    class Type(ModelEnum):
+        """Тип платежа."""
+
+        TON = "TON"
+        DEMO = "DEMO"
+
     id = models.CharField(max_length=64, primary_key=True, help_text="Payment ID")
+    type = models.CharField(max_length=16, choices=Type.choices(), help_text="Payment type")
     amount = models.DecimalField(max_digits=16, decimal_places=6, help_text="Payment amount")
     is_payed = models.BooleanField(help_text="Is payment payed")
 
