@@ -68,6 +68,7 @@ class Settings(BaseSettings):
     django_secret_key: str
     django_settings_module: str
     allowed_hosts: str
+    bros_secret_token: str
     auth: AuthSettings = Field(default_factory=AuthSettings)
     sentry: SentrySettings | None = None
     postgres: PostgresSettings

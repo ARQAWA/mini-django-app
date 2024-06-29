@@ -1,8 +1,9 @@
 import asyncio
 import time
 from datetime import timedelta
+from typing import Any, cast
 
-from django.db.models import Case, DecimalField, Value, When
+from django.db.models import Case, DecimalField, Sum, Value, When
 from django.db.models.functions import Now
 
 from app.core.apps.core.models import Payment
@@ -36,6 +37,10 @@ class BillingService(metaclass=SingletonMeta):
 
             await synct(self.__apply_payments)(payed_data)
 
+    async def stats(self) -> dict[str, int]:
+        """Статистика."""
+        return cast(dict[str, int], await synct(self.__stats)())
+
     @staticmethod
     @by_transaction
     def __apply_payments(payed_data: list[tuple[str, int]]) -> None:
@@ -52,3 +57,38 @@ class BillingService(metaclass=SingletonMeta):
         if ids:
             Slot.objects.filter(payment__id__in=ids).update(expired_at=Now() + timedelta(days=31))
             Payment.objects.filter(id__in=ids).update(amount=Case(*cases, output_field=DecimalField()), is_payed=True)
+
+    @staticmethod
+    @by_transaction
+    def __stats() -> dict[str, Any]:
+        """Статистика."""
+        ton = Payment.Type.TON.value
+
+        payments_count = Payment.objects.filter(type=ton).count()
+        payments_amount = Payment.objects.filter(type=ton).aggregate(amount_sum=Sum("amount"))["amount_sum"]
+        payed_count = Payment.objects.filter(type=ton, is_payed=True).count()
+        payed_amount = Payment.objects.filter(type=ton, is_payed=True).aggregate(amount_sum=Sum("amount"))["amount_sum"]
+
+        today_count = Payment.objects.filter(type=ton, created_at__date=Now()).count()
+        today_amount = (
+            (Payment.objects.filter(type=ton, created_at__date=Now()).aggregate(amount_sum=Sum("amount"))["amount_sum"])
+            or 0
+        )
+        today_payed_count = Payment.objects.filter(type=ton, is_payed=True, created_at__date=Now()).count()
+        today_payed_amount = (
+            (
+                Payment.objects.filter(type=ton, is_payed=True, created_at__date=Now()).aggregate(
+                    amount_sum=Sum("amount")
+                )["amount_sum"]
+            )
+            or 0
+        )
+
+        return {
+            "payments_count": f"{payed_count}/{payments_count} | diff: +{payments_count - payed_count}",
+            "payments_amount": f"{payed_amount}/{payments_amount} | diff: +{payments_amount - payed_amount}",
+            "today": {
+                "count": f"{today_payed_count}/{today_count} | diff: +{today_count - today_payed_count}",
+                "amount": f"{today_payed_amount}/{today_amount} | diff: +{today_amount - today_payed_amount}",
+            },
+        }
