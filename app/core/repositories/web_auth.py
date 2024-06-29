@@ -1,8 +1,8 @@
 from typing import cast
 
-from app.core.clients.redis_ import redis_client
 from app.core.common.singleton import SingletonMeta
 from app.core.envs import envs
+from app.core.libs.redis_ import redis_client
 
 
 class WebAuthRepo(metaclass=SingletonMeta):

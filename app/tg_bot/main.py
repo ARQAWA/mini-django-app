@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from loguru import logger
 
 from app.core.envs import envs
+from app.core.libs.shutdown_container import shutdown_container
 from app.tg_bot.handlers.auth_code import msg_auth_code
 from app.tg_bot.handlers.start import msg_start
 
@@ -21,8 +22,11 @@ class MiniAppHolderBot:
 
     async def bootstrap(self) -> None:
         """Запуск бота."""
-        logger.debug("Запуск бота-держателя мини-приложения.")
-        await self._dispatcher.start_polling(self._bot, polling_timeout=30)
+        try:
+            logger.debug("Запуск бота-держателя мини-приложения.")
+            await self._dispatcher.start_polling(self._bot, polling_timeout=30)
+        finally:
+            await shutdown_container.shutdown()
 
     def __register_handler(self, func: Callable[[Bot, Dispatcher], None]) -> None:
         """Регистрация обработчика."""

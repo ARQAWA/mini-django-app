@@ -52,12 +52,13 @@ django-create-su:
 	@python3 manage.py createsuperuser
 
 django-uvicorn-run:
-	@uvicorn "app.core.asgi:application" \
+	@uvicorn "app.core.asgi:app" \
 		--host "0.0.0.0" \
 		--loop uvloop \
 		--http httptools \
 		--lifespan off \
-		--interface asgi3
+		--interface asgi3 \
+		--log-level critical
 
 run-django: django-init django-uvicorn-run
 
