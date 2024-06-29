@@ -25,6 +25,10 @@ class HamsterClient:
         }
         self._http = Client(headers=self._headers)
 
+    def close(self) -> None:
+        """Close the HTTP client."""
+        self._http.close()
+
     def sync(self) -> ClickerUser | None:
         """Sync the user's data."""
         logger.debug("Syncing user data...")

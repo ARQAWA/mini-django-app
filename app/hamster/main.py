@@ -72,7 +72,10 @@ if __name__ == "__main__":
 
     from app.core.common.sentry import sentry_init
 
-    with suppress(KeyboardInterrupt, SystemExit, CancelledError):
-        sentry_init()
-        while True:
-            run()
+    try:
+        with suppress(KeyboardInterrupt, SystemExit, CancelledError):
+            sentry_init()
+            while True:
+                run()
+    finally:
+        hamster_client.close()
