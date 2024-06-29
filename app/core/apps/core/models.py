@@ -33,7 +33,7 @@ class Payment(models.Model):
 
     id = models.TextField(primary_key=True, help_text="Payment ID")
     type = models.CharField(choices=Type.choices(), help_text="Payment type")
-    amount = models.DecimalField(max_digits=16, decimal_places=6, help_text="Payment amount")
+    amount = models.DecimalField(max_digits=32, decimal_places=0, help_text="Payment amount")
     is_payed = models.BooleanField(db_index=True, help_text="Is payment payed")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text="Payment created at")
 

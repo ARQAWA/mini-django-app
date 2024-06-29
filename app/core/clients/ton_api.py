@@ -33,7 +33,7 @@ class TonApiClient(metaclass=SingletonMeta):
     def __init__(self) -> None:
         self._httpx_client = httpx_client
 
-    async def get_payed_list(self) -> list[str]:
+    async def get_payed_list(self) -> list[tuple[str, int]]:
         """Получение списка проведенных платежей."""
         url = f"{self._base_url}{self._urls["get_transactions"].format(address=self._payment_address)}"
 
@@ -41,15 +41,16 @@ class TonApiClient(metaclass=SingletonMeta):
             last = time.time()
             response = await self._httpx_client.get(url, headers=self._headers)
             last = time.time() - last
-            loguru.logger.debug(f"GET {url} / {last:.3f}s. / - {response.status_code} - {response.text[:32]}")
+            loguru.logger.debug(f"GET {url} / {last:.3f}s. / {response.status_code}")
             response.raise_for_status()
-            jres: list[str] = await syncp(process_transactions_reponse)(response.content)
+            jres: list[tuple[str, int]] = await syncp(process_transactions_reponse)(response.content)
+            loguru.logger.debug(f"RESULT / {jres}")
             return jres
         except Exception as err:
             raise ApiError.failed_dependency(f"Failed to get payed list: {err}") from err
 
 
-def process_transactions_reponse(response: bytes) -> list[str]:
+def process_transactions_reponse(response: bytes) -> list[tuple[str, int]]:
     """Обработка ответа с данными о транзакциях."""
     data: DictStrAny = orjson.loads(response)
 
@@ -57,7 +58,10 @@ def process_transactions_reponse(response: bytes) -> list[str]:
         raise ValueError("Invalid response data")
 
     processed_data = [
-        item.get("in_msg", {}).get("decoded_body", {}).get("text", None)
+        (
+            (in_msg := item.get("in_msg", {})).get("decoded_body", {}).get("text", None),
+            in_msg.get("value", 0),
+        )
         for item in data.get("transactions", [])
         if item.get("success", False)
     ]
