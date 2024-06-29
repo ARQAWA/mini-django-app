@@ -48,12 +48,14 @@ class BrosSecretAuthDepends:
 
     openapi_security_schema = SECURITY_SCHEMA
 
-    async def __call__(self, request: HttpRequest) -> None:
+    def __call__(self, request: HttpRequest) -> int:
         """Проверка секретного ключа."""
         token = _extract_token(request)
 
         if token != envs.bros_secret_token:
             raise UNATHORIZED_ERROR
+
+        return 1
 
 
 __all__ = ["UserAuthDepends", "UserHttpRequest", "BrosSecretAuthDepends", "UNATHORIZED_ERROR"]
