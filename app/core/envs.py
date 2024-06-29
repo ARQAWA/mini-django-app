@@ -54,6 +54,13 @@ class RedisSettings(BaseModel):
         return f"redis://{self.host}:{self.port}/{self.db}"
 
 
+class TonClientSettings(BaseModel):
+    """Настройки TonClient."""
+
+    base_url: str
+    payment_address: str
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
 
@@ -65,6 +72,7 @@ class Settings(BaseSettings):
     sentry: SentrySettings | None = None
     postgres: PostgresSettings
     redis: RedisSettings
+    ton_client: TonClientSettings
     telegram_bot: TelegramSettings
     hamster: HamsterSettings | None = None
 
