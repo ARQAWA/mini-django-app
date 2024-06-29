@@ -1,5 +1,5 @@
 from app.core.apps.core.models import Payment
-from app.core.clients.ton_blockchain import TonApiClient
+from app.core.clients.ton_api import TonApiClient
 from app.core.common.singleton import SingletonMeta
 
 

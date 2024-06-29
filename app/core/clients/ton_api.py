@@ -21,7 +21,7 @@ class TonApiClient(metaclass=SingletonMeta):
     _payment_address = envs.ton_client.payment_address
 
     _urls = {
-        "get_transactions": "/v2/blockchain/accounts/{address}/transactions?limit=1000&sort_order=desc",
+        "get_transactions": "/v2/blockchain/accounts/{address}/transactions?limit=100&sort_order=desc",
     }
 
     _headers = {
