@@ -37,20 +37,6 @@ async def add_slot(
     return await SlotsService().add_slot(request.auth, game_id, body)
 
 
-@router.patch(
-    "/{game_id}/slots/{slot_id}/check_payment",
-    summary="Проверка платежа",
-    response={200: SlotModelSchema},
-)
-async def check_payment(
-    request: UserHttpRequest,
-    game_id: Game.GAMES_LITERAL,
-    slot_id: int,
-) -> Any:
-    """Проверка платежа."""
-    return await SlotsService().check_payment(request.auth, game_id, slot_id)
-
-
 @router.delete(
     "/{game_id}/service_route/slots/{slot_id}",
     summary="Удаление слота игры",

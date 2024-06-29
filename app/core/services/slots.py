@@ -11,6 +11,7 @@ from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 from app.core.repositories.web_auth import WebAuthRepo
+from app.core.services.billing import BillingService
 
 if TYPE_CHECKING:
     from app.api.v1.game.schemas import SlotCreatePostBody
@@ -21,6 +22,7 @@ class SlotsService(metaclass=SingletonMeta):
 
     def __init__(self) -> None:
         self._web_auth_repo = WebAuthRepo()
+        self._billing_service = BillingService()
 
     async def all(
         self,
@@ -45,22 +47,7 @@ class SlotsService(metaclass=SingletonMeta):
         :param body: тело запроса
         :return: слот
         """
-        created_slot = cast(Slot, await synct(self.__add_slot)(customer_id, game_id, body))
-        if body.is_demo:
-            return created_slot
-        return await self.__check_slot_payment(created_slot)
-
-    async def check_payment(self, customer_id: int, game_id: str, slot_id: int) -> Slot:
-        """
-        Проверка платежа.
-
-        :param customer_id: идентификатор пользователя
-        :param game_id: идентификатор игры
-        :param slot_id: идентификатор слота
-        :return: слот
-        """
-        slot = cast(Slot, await synct(self.__get_checked_slot)(customer_id, game_id, slot_id))
-        return await self.__check_slot_payment(slot)
+        return cast(Slot, await synct(self.__add_slot)(customer_id, game_id, body))
 
     async def delete_slot(self, customer_id: int, game_id: str, slot_id: int) -> None:
         """
@@ -71,17 +58,6 @@ class SlotsService(metaclass=SingletonMeta):
         :param slot_id: идентификатор слота.
         """
         await synct(self.__delete_slot)(customer_id, game_id, slot_id)
-
-    async def __check_slot_payment(self, slot: Slot) -> Slot:
-        """Проверка платежа слота."""
-        # if slot.payment.is_payed:
-        #     return slot
-        #
-        # check_res = await self._ton_client.check_payment(slot.payment.id)
-        # if check_res.is_payed:
-        #     slot.payment.is_payed = True
-        #     await slot.payment.asave()
-        return slot
 
     @staticmethod
     @by_transaction
