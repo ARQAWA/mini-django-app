@@ -64,17 +64,19 @@ class BillingService(metaclass=SingletonMeta):
         """Статистика."""
         ton = Payment.Type.TON.value
 
-        payments_count = Payment.objects.filter(type=ton).count()
-        payments_amount = Payment.objects.filter(type=ton).aggregate(amount_sum=Sum("amount"))["amount_sum"]
-        payed_count = Payment.objects.filter(type=ton, is_payed=True).count()
-        payed_amount = Payment.objects.filter(type=ton, is_payed=True).aggregate(amount_sum=Sum("amount"))["amount_sum"]
+        payments_count = Payment.objects.filter(type=ton).count() or 0
+        payments_amount = Payment.objects.filter(type=ton).aggregate(amount_sum=Sum("amount"))["amount_sum"] or 0
+        payed_count = Payment.objects.filter(type=ton, is_payed=True).count() or 0
+        payed_amount = (
+            Payment.objects.filter(type=ton, is_payed=True).aggregate(amount_sum=Sum("amount"))["amount_sum"] or 0
+        )
 
-        today_count = Payment.objects.filter(type=ton, created_at__date=Now()).count()
+        today_count = Payment.objects.filter(type=ton, created_at__date=Now()).count() or 0
         today_amount = (
             (Payment.objects.filter(type=ton, created_at__date=Now()).aggregate(amount_sum=Sum("amount"))["amount_sum"])
             or 0
         )
-        today_payed_count = Payment.objects.filter(type=ton, is_payed=True, created_at__date=Now()).count()
+        today_payed_count = Payment.objects.filter(type=ton, is_payed=True, created_at__date=Now()).count() or 0
         today_payed_amount = (
             (
                 Payment.objects.filter(type=ton, is_payed=True, created_at__date=Now()).aggregate(
