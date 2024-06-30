@@ -47,11 +47,11 @@ class Upgrade(BaseModel):
         return Decimal(f"{self.price / self.profit_per_hour_delta:.2f}")
 
 
-class Section(BaseModel):
-    """The section object."""
-
-    section: str
-    is_available: bool = Field(..., alias="isAvailable")
+# class Section(BaseModel):
+#     """The section object."""
+#
+#     section: str
+#     is_available: bool = Field(..., alias="isAvailable")
 
 
 class DailyCombo(BaseModel):
@@ -67,10 +67,15 @@ class UpgradesData(BaseModel):
     """The main model object."""
 
     upgrades_for_buy: List[Upgrade] = Field(..., alias="upgradesForBuy")
-    sections: List[Section]
+    # sections: List[Section] | None = Field(None, alias="sections")
     daily_combo: DailyCombo = Field(..., alias="dailyCombo")
 
     model_config = ConfigDict(frozen=True)
+
+    @property
+    def can_claim_combo(self) -> bool:
+        """Check if the combo can be claimed."""
+        return not self.daily_combo.is_claimed and len(self.daily_combo.upgrade_ids) == 3
 
     def get_most_profitable_upgrades(self) -> list[Upgrade]:
         """Get the most profitable upgrade."""

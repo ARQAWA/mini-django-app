@@ -5,7 +5,7 @@ from loguru import logger
 
 from app.core.envs import envs
 from app.hamster.schemas.clicker_user import ClickerUser
-from app.hamster.schemas.upgrades_for_buy import Upgrade, UpgradesData
+from app.hamster.schemas.upgrades_for_buy import DailyCombo, Upgrade, UpgradesData
 
 
 class HamsterClient:
@@ -90,7 +90,7 @@ class HamsterClient:
 
         return UpgradesData.model_validate(jresponse)
 
-    def buy_upgrade(self, upgrade: Upgrade) -> ClickerUser | None:
+    def buy_upgrade(self, upgrade: Upgrade) -> tuple[ClickerUser, UpgradesData] | None:
         """Buy an upgrade."""
         logger.debug(
             f"Buying upgrade {upgrade.id}; LEVEL: {upgrade.level}; "
@@ -106,24 +106,28 @@ class HamsterClient:
         )
 
         try:
-            jresponse = response.json()["clickerUser"]
+            jresponse = response.json()
         except Exception as err:
             logger.debug((err, response.status_code, response.text[:32]))
             return None
 
-        return ClickerUser.model_validate(jresponse)
+        clicker = ClickerUser.model_validate(jresponse["clickerUser"])
+        upgrades = UpgradesData.model_validate(jresponse)
+        return clicker, upgrades
 
-    def claim_combo(self) -> ClickerUser | None:
+    def claim_combo(self) -> tuple[ClickerUser, DailyCombo] | None:
         """Claim combo."""
         response = self._http.post("https://api.hamsterkombat.io/clicker/claim-daily-combo")
 
         try:
-            jresponse = response.json()["clickerUser"]
+            jresponse = response.json()
         except Exception as err:
             logger.debug((err, response.status_code, response.text[:32]))
             return None
 
-        return ClickerUser.model_validate(jresponse)
+        clicker = ClickerUser.model_validate(jresponse["clickerUser"])
+        daily_combo = DailyCombo.model_validate(jresponse["dailyCombo"])
+        return clicker, daily_combo
 
 
 hamster_client = HamsterClient()
