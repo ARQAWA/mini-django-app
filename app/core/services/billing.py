@@ -32,10 +32,8 @@ class BillingService(metaclass=SingletonMeta):
 
             self.__last_checked = cur
             payed_data = await self._ton_client.get_payed_list()
-
             if not payed_data:
                 return
-
             await synct(self.__apply_payments)(payed_data)
 
     async def stats(self) -> dict[str, int]:
