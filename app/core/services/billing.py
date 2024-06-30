@@ -10,7 +10,7 @@ from django.db.models.functions import Now
 from app.core.apps.core.models import Payment
 from app.core.apps.games.models import Account, Slot
 from app.core.clients.ton_api import TonApiClient
-from app.core.common.executors import get_ppe, synct
+from app.core.common.executors import get_process_pool, synct
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 
@@ -50,12 +50,12 @@ class BillingService(metaclass=SingletonMeta):
 
         convert_future = cast(
             Future[tuple[list[str], list[tuple[str, int]]]],
-            get_ppe().submit(self.__convert_datas, non_payed_ids, payed_data),
+            get_process_pool().submit(self.__convert_datas, non_payed_ids, payed_data),
         )
 
         ids, prices = convert_future.result()
         if ids:
-            cases = [When(id=pid, then=Value(value)) for pid, value in prices]
+            cases = (When(id=pid, then=Value(value)) for pid, value in prices)
             Slot.objects.filter(payment__id__in=ids).update(expired_at=Now() + timedelta(days=31))
             Payment.objects.filter(id__in=ids).update(amount=Case(*cases, output_field=DecimalField()), is_payed=True)
 

@@ -9,7 +9,7 @@ __XQTR_P: ProcessPoolExecutor | None = None
 TCallable = TypeVar("TCallable", bound=Callable[..., Any])
 
 
-def get_tpe() -> ThreadPoolExecutor:
+def get_thread_pool() -> ThreadPoolExecutor:
     """Get thread pool executor."""
     global __XQTR_T
     if not __XQTR_T:
@@ -17,7 +17,7 @@ def get_tpe() -> ThreadPoolExecutor:
     return __XQTR_T
 
 
-def get_ppe() -> ProcessPoolExecutor:
+def get_process_pool() -> ProcessPoolExecutor:
     """Get process pool executor."""
     global __XQTR_P
     if not __XQTR_P:
@@ -30,8 +30,8 @@ def synct(func: TCallable, event_loop: AbstractEventLoop | None = None) -> Calla
 
     async def wrapper(*args: Any) -> Any:
         if event_loop:
-            return await event_loop.run_in_executor(get_tpe(), func, *args)
-        return await asyncio.get_running_loop().run_in_executor(get_tpe(), func, *args)
+            return await event_loop.run_in_executor(get_thread_pool(), func, *args)
+        return await asyncio.get_running_loop().run_in_executor(get_thread_pool(), func, *args)
 
     return wrapper
 
@@ -41,10 +41,10 @@ def syncp(func: TCallable, event_loop: AbstractEventLoop | None = None) -> Calla
 
     async def wrapper(*args: Any) -> Any:
         if event_loop:
-            return await event_loop.run_in_executor(get_ppe(), func, *args)
-        return await asyncio.get_running_loop().run_in_executor(get_ppe(), func, *args)
+            return await event_loop.run_in_executor(get_process_pool(), func, *args)
+        return await asyncio.get_running_loop().run_in_executor(get_process_pool(), func, *args)
 
     return wrapper
 
 
-__all__ = ["synct", "syncp", "get_tpe", "get_ppe"]
+__all__ = ["synct", "syncp", "get_thread_pool", "get_process_pool"]
