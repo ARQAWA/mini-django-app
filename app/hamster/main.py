@@ -1,6 +1,7 @@
 import random
 import time
 
+import sentry_sdk
 from loguru import logger
 
 from app.hamster.client import hamster_client
@@ -72,10 +73,14 @@ if __name__ == "__main__":
 
     from app.core.common.sentry import sentry_init
 
-    try:
-        with suppress(KeyboardInterrupt, SystemExit, CancelledError):
-            sentry_init()
-            while True:
+    with suppress(KeyboardInterrupt, SystemExit, CancelledError):
+        sentry_init()
+        while True:
+            try:
                 run()
-    finally:
-        hamster_client.close()
+            except Exception as err:
+                logger.error(err)
+                sentry_sdk.capture_exception(err)
+                time.sleep(15.0)
+            finally:
+                hamster_client.close()
