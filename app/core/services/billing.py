@@ -50,7 +50,7 @@ class BillingService(metaclass=SingletonMeta):
 
         convert_future = cast(
             Future[tuple[list[str], list[tuple[str, int]]]],
-            get_process_pool().submit(self.__convert_datas, non_payed_ids, payed_data),
+            get_process_pool().submit(_sync_convert_datas, non_payed_ids, payed_data),
         )
 
         ids, prices = convert_future.result()
@@ -69,19 +69,6 @@ class BillingService(metaclass=SingletonMeta):
             payments_query_set.delete()
             if aids:
                 Account.objects.filter(id__in=aids).delete()
-
-    @staticmethod
-    def __convert_datas(
-        non_payed_ids: set[str],
-        payed_data: list[tuple[str, int]],
-    ) -> tuple[list[str], list[tuple[str, int]]]:
-        """Конвертация данных."""
-        ids, prices = [], []
-        for pid, value in payed_data:
-            if pid in non_payed_ids:
-                ids.append(pid)
-                prices.append((pid, value))
-        return ids, prices
 
     @staticmethod
     @by_transaction
@@ -119,3 +106,16 @@ class BillingService(metaclass=SingletonMeta):
                 "amount": f"{today_payed_amount}/{today_amount} | diff: +{today_amount - today_payed_amount}",
             },
         }
+
+
+def _sync_convert_datas(
+    non_payed_ids: set[str],
+    payed_data: list[tuple[str, int]],
+) -> tuple[list[str], list[tuple[str, int]]]:
+    """Конвертация данных."""
+    ids, prices = [], []
+    for pid, value in payed_data:
+        if pid in non_payed_ids:
+            ids.append(pid)
+            prices.append((pid, value))
+    return ids, prices
