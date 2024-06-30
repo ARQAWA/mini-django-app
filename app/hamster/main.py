@@ -73,14 +73,15 @@ if __name__ == "__main__":
 
     from app.core.common.sentry import sentry_init
 
-    with suppress(KeyboardInterrupt, SystemExit, CancelledError):
-        sentry_init()
-        while True:
-            try:
-                run()
-            except Exception as err:
-                logger.error(err)
-                sentry_sdk.capture_exception(err)
-                time.sleep(15.0)
-            finally:
-                hamster_client.close()
+    try:
+        with suppress(KeyboardInterrupt, SystemExit, CancelledError):
+            sentry_init()
+            while True:
+                try:
+                    run()
+                except Exception as err:
+                    logger.error(err)
+                    sentry_sdk.capture_exception(err)
+                    time.sleep(15.0)
+    finally:
+        hamster_client.close()
