@@ -13,6 +13,7 @@ class ModelEnum(Enum):
 class ErrorsPhrases(StrEnum):
     """Строки ошибок."""
 
+    GAME_NOT_FOUND = "GAME_NOT_FOUND"  # игра не найдена
     SLOT_NOT_FOUND = "SLOT_NOT_FOUND"  # слот не найден
     ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND"  # аккаунт не найден
     ANOTHER_USER_LINKED = "ANOTHER_USER_LINKED"  # аккаунт уже привязан к другому пользователю

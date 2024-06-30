@@ -17,8 +17,10 @@ class Game(models.Model):
 
     GAMES_LITERAL = Literal["hamster-kombat",]
 
+    LITERAL_HAMSTER_KOMBAT = "hamster-kombat"
+
     GAMES_DICT = {
-        "hamster-kombat": "Hamster Kombat",
+        LITERAL_HAMSTER_KOMBAT: "Hamster Kombat",
     }
 
 

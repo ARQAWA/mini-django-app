@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, cast
 
+from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.models import Network as NetworkStats
 from app.core.apps.stats.models import Play as PlayStats
@@ -24,7 +25,7 @@ class AccountsService(metaclass=SingletonMeta):
     async def link(
         self,
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
         body: "AccountLinkPutBody",
     ) -> Account:
@@ -37,7 +38,7 @@ class AccountsService(metaclass=SingletonMeta):
         :param body: данные аккаунта
         :return: аккаунт
         """
-        token = await self._hamster_client.auth_tg_webapp(body.init_data, agent := fake_user_agent.random)
+        token = await self.__get_token_for_game(game_id, body, agent := fake_user_agent.random)
         return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body, token, agent))
 
     async def unlink(
@@ -82,6 +83,14 @@ class AccountsService(metaclass=SingletonMeta):
         :return: аккаунт.
         """
         return cast(Account, await synct(self.__reset)(customer_id, game_id, slot_id))
+
+    async def __get_token_for_game(self, game_id: Game.GAMES_LITERAL, body: "AccountLinkPutBody", agent: str) -> str:
+        """Получение токена для игры."""
+        match game_id:
+            case Game.LITERAL_HAMSTER_KOMBAT:
+                return await self._hamster_client.auth_tg_webapp(body.init_data, agent)
+            case _:
+                raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)
 
     @staticmethod
     @by_transaction
