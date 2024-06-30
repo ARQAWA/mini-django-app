@@ -35,7 +35,7 @@ def run() -> None:  # noqa: C901
             claim_result = hamster_client.claim_combo()
             if claim_result is None:
                 return print_exit("Failed to claim combo.")
-            user_data, upgrades_list.daily_combo = claim_result
+            user_data, _ = claim_result  # noqa: F841
 
         # 6. Buy most profitable upgrades
         mfp_upgrades = upgrades_list.get_most_profitable_upgrades()
