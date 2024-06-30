@@ -19,3 +19,5 @@ class ErrorsPhrases(StrEnum):
     ANOTHER_SLOT_LINKED = "ANOTHER_SLOT_LINKED"  # аккаунт уже привязан к другому слоту
     DEMO_SLOT_NOT_AVAILABLE = "DEMO_SLOT_NOT_AVAILABLE"  # демо слот недоступен
     PAYMENT_EXTENSION_NOT_ALLOWED = "PAYMENT_EXTENSION_NOT_ALLOWED"  # продление платежа недоступно
+    NON_PLAYABLE_INITDATA_CORRUPTED = "NON_PLAYABLE_INITDATA_CORRUPTED"  # данные инициализации повреждены
+    HAMSTER_UNEXPECTED_AUTH_REPONSE = "HAMSTER_UNEXPECTED_AUTH_REPONSE"  # неожиданный ответ авторизации

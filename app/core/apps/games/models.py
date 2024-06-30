@@ -16,7 +16,8 @@ class Account(models.Model):
 
     is_playing = models.BooleanField(default=False, help_text="Is account playing")
 
-    auth_token = models.CharField(null=True, help_text="Auth token")
+    auth_token = models.CharField(help_text="Auth token")
+    user_agent = models.CharField(help_text="User agent")
 
     game = models.ForeignKey("core.Game", on_delete=models.RESTRICT, help_text="Game")
     customer = models.ForeignKey("core.Customer", on_delete=models.RESTRICT, help_text="User")

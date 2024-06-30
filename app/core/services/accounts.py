@@ -3,9 +3,11 @@ from typing import TYPE_CHECKING, cast
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.models import Network as NetworkStats
 from app.core.apps.stats.models import Play as PlayStats
+from app.core.clients.tma_hamster import TMAHamsterKombat
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
 from app.core.common.executors import synct
+from app.core.common.fake_ua import fake_user_agent
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 
@@ -15,6 +17,9 @@ if TYPE_CHECKING:
 
 class AccountsService(metaclass=SingletonMeta):
     """Сервис аккаунтов."""
+
+    def __init__(self) -> None:
+        self._hamster_client = TMAHamsterKombat()
 
     async def link(
         self,
@@ -32,7 +37,8 @@ class AccountsService(metaclass=SingletonMeta):
         :param body: данные аккаунта
         :return: аккаунт
         """
-        return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body))
+        token = await self._hamster_client.auth_tg_webapp(body.init_data, agent := fake_user_agent.random)
+        return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body, token, agent))
 
     async def unlink(
         self,
@@ -84,6 +90,8 @@ class AccountsService(metaclass=SingletonMeta):
         game_id: str,
         slot_id: int,
         body: "AccountLinkPutBody",
+        auth_token: str,
+        user_agent: str,
     ) -> Account:
         """Привязка аккаунта к слоту."""
         account, is_created = Account.objects.update_or_create(
@@ -96,6 +104,8 @@ class AccountsService(metaclass=SingletonMeta):
                 username=body.username,
                 init_data=body.init_data,
                 proxy_url=body.proxy,
+                auth_token=auth_token,
+                user_agent=user_agent,
             ),
         )
 
