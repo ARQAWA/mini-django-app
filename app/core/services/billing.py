@@ -1,5 +1,6 @@
 import asyncio
 import time
+from concurrent.futures import Future
 from datetime import timedelta
 from typing import Any, cast
 
@@ -7,9 +8,9 @@ from django.db.models import Case, DecimalField, Sum, Value, When
 from django.db.models.functions import Now
 
 from app.core.apps.core.models import Payment
-from app.core.apps.games.models import Slot
+from app.core.apps.games.models import Account, Slot
 from app.core.clients.ton_api import TonApiClient
-from app.core.common.executors import synct
+from app.core.common.executors import get_ppe, synct
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 
@@ -41,22 +42,46 @@ class BillingService(metaclass=SingletonMeta):
         """Статистика."""
         return cast(dict[str, int], await synct(self.__stats)())
 
-    @staticmethod
     @by_transaction
-    def __apply_payments(payed_data: list[tuple[str, int]]) -> None:
+    def __apply_payments(self, payed_data: list[tuple[str, int]]) -> None:
         """Проведение платежей."""
         non_payed_ids = set(Payment.objects.select_for_update().filter(is_payed=False).values_list("id", flat=True))
         tuple(Slot.objects.select_for_update().filter(payment_id__in=non_payed_ids).values_list("id", flat=True))
 
-        ids, cases = [], []
+        convert_future = cast(
+            Future[tuple[list[str], list[tuple[str, int]]]],
+            get_ppe().submit(self.__convert_datas, non_payed_ids, payed_data),
+        )
+
+        ids, prices = convert_future.result()
+        if ids:
+            cases = [When(id=pid, then=Value(value)) for pid, value in prices]
+            Slot.objects.filter(payment__id__in=ids).update(expired_at=Now() + timedelta(days=31))
+            Payment.objects.filter(id__in=ids).update(amount=Case(*cases, output_field=DecimalField()), is_payed=True)
+
+        # удаляем старые платежи
+        payments_query_set = Payment.objects.filter(is_payed=False, created_at__lte=Now() - timedelta(minutes=3))
+        if pids := list(payments_query_set.values_list("id", flat=True)):
+            slots_query_set = Slot.objects.filter(payment_id__in=pids)
+            aids = list(slots_query_set.values_list("account_id", flat=True).exclude(account_id=None))
+
+            slots_query_set.delete()
+            payments_query_set.delete()
+            if aids:
+                Account.objects.filter(id__in=aids).delete()
+
+    @staticmethod
+    def __convert_datas(
+        non_payed_ids: set[str],
+        payed_data: list[tuple[str, int]],
+    ) -> tuple[list[str], list[tuple[str, int]]]:
+        """Конвертация данных."""
+        ids, prices = [], []
         for pid, value in payed_data:
             if pid in non_payed_ids:
                 ids.append(pid)
-                cases.append(When(id=pid, then=Value(value)))
-
-        if ids:
-            Slot.objects.filter(payment__id__in=ids).update(expired_at=Now() + timedelta(days=31))
-            Payment.objects.filter(id__in=ids).update(amount=Case(*cases, output_field=DecimalField()), is_payed=True)
+                prices.append((pid, value))
+        return ids, prices
 
     @staticmethod
     @by_transaction
