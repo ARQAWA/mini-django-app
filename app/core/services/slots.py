@@ -122,25 +122,13 @@ class SlotsService(metaclass=SingletonMeta):
     @by_transaction
     def __delete_slot(cid: int, gid: str, sid: int) -> None:
         """Удаление слота."""
-        slot: Slot | None = (
-            Slot.objects.select_related("account", "payment").filter(id=sid, customer_id=cid, game_id=gid).first()
-        )
-
+        slot: Slot | None
+        slot = Slot.objects.filter(id=sid, customer_id=cid, game_id=gid).only("id", "account_id", "payment_id").first()
         if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
-
-        account: Account | None = None
-        if slot.account is not None:
-            account = slot.account
-
-        payment: Payment | None = None
-        if slot.payment is not None:
-            payment = slot.payment
+        pid, aid = slot.payment_id, slot.account_id
 
         slot.delete()
-
-        if account is not None:
-            account.delete()
-
-        if payment is not None:
-            payment.delete()
+        Payment.objects.filter(id=pid).delete()
+        if aid is not None:
+            Account.objects.filter(id=aid).delete()
