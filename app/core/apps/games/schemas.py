@@ -15,7 +15,6 @@ class AccountModelSchema(ModelSchema):
     last_name: str | None = Field(title="Фамилия")
     username: str | None = Field(title="Username")
 
-    init_data: str = Field(title="Данные инициализации")
     proxy_url: str | None = Field(title="URL прокси")
 
     play_stats: PlayModelSchema = Field(alias="play", title="Статистика игры")
@@ -27,7 +26,7 @@ class AccountModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Account
-        exclude = ("id", "auth_token", "game", "customer")
+        exclude = ("id", "init_data", "auth_token", "user_agent", "game", "customer")
 
 
 class SlotModelSchema(ModelSchema):
@@ -42,4 +41,4 @@ class SlotModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Slot
-        fields = ("id", "account", "expired_at")
+        fields = ("id", "account", "expired_at", "is_payed")
