@@ -6,6 +6,12 @@ from loguru import logger
 from app.hamster.client import hamster_client
 
 
+class TIMERS:
+    """The timers for the hamster clicker."""
+
+    DAILY = 0
+
+
 def print_exit(message: str, *, timer: float = 10.0) -> None:
     """logger.debug a message and exit after 10 seconds."""
     logger.debug(message)
@@ -22,6 +28,17 @@ def run() -> None:  # noqa: C901
 
     # 2. Tap the hamster
     user_data = hamster_client.taps(user_data)
+
+    # Fetch tasks
+    if TIMERS.DAILY <= time.time():
+        tasks = hamster_client.get_tasks()
+        for task in tasks:
+            if task["isCompleted"]:
+                continue
+            user_data = hamster_client.pick_task(task["id"])
+            if user_data is None:
+                return print_exit("Failed to pick task.")
+        TIMERS.DAILY = time.time() + 60 * 60 * 3  # 3 hours
 
     # 3. Fetch upgrades list
     upgrades_list = hamster_client.get_upgrades_list()

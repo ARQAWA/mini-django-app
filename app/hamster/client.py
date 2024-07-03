@@ -4,7 +4,7 @@ from httpx import Client
 from loguru import logger
 
 from app.core.envs import envs
-from app.hamster.schemas.clicker_user import ClickerUser
+from app.hamster.schemas.clicker_user import ClickerUser, Task
 from app.hamster.schemas.upgrades_for_buy import DailyCombo, Upgrade, UpgradesData
 
 
@@ -117,6 +117,8 @@ class HamsterClient:
 
     def claim_combo(self) -> tuple[ClickerUser, DailyCombo] | None:
         """Claim combo."""
+        logger.debug("Claiming daily combo...")
+
         response = self._http.post("https://api.hamsterkombat.io/clicker/claim-daily-combo")
 
         try:
@@ -128,6 +130,37 @@ class HamsterClient:
         clicker = ClickerUser.model_validate(jresponse["clickerUser"])
         daily_combo = DailyCombo.model_validate(jresponse["dailyCombo"])
         return clicker, daily_combo
+
+    def get_tasks(self) -> list[Task]:
+        """Get tasks."""
+        logger.debug("Fetching tasks...")
+
+        response = self._http.post("https://api.hamsterkombat.io/clicker/list-tasks")
+
+        try:
+            jresponse = response.json()
+        except Exception as err:
+            logger.debug((err, response.status_code, response.text[:32]))
+            return []
+
+        return jresponse["tasks"]
+
+    def pick_task(self, task_id: str) -> ClickerUser | None:
+        """Pick a task."""
+        logger.debug(f"Picking task {task_id}...")
+
+        response = self._http.post(
+            "https://api.hamsterkombat.io/clicker/check-task",
+            json={"taskId": task_id},
+        )
+
+        try:
+            jresponse = response.json()
+        except Exception as err:
+            logger.debug((err, response.status_code, response.text[:32]))
+            return None
+
+        return ClickerUser.model_validate(jresponse["clickerUser"])
 
 
 hamster_client = HamsterClient()
