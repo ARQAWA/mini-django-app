@@ -41,4 +41,4 @@ class SlotModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Slot
-        fields = ("id", "account", "expired_at", "is_payed")
+        fields = ("id", "account", "expired_at")
