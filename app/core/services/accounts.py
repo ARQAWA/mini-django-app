@@ -7,10 +7,11 @@ from app.core.apps.stats.models import Play as PlayStats
 from app.core.clients.tma_hamster import TMAHamsterKombat
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
-from app.core.common.executors import synct
+from app.core.common.executors import syncp, synct
 from app.core.common.fake_ua import fake_user_agent
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
+from app.core.services.tokens.hamster import get_raw_init_data
 
 if TYPE_CHECKING:
     from app.api.v1.game.schemas import AccountLinkPutBody
@@ -83,14 +84,6 @@ class AccountsService(metaclass=SingletonMeta):
         :return: аккаунт.
         """
         return cast(Account, await synct(self.__reset)(customer_id, game_id, slot_id))
-
-    async def __get_token_for_game(self, game_id: Game.GAMES_LITERAL, body: "AccountLinkPutBody", agent: str) -> str:
-        """Получение токена для игры."""
-        match game_id:
-            case Game.LITERAL_HAMSTER_KOMBAT:
-                return await self._hamster_client.auth_tg_webapp(body.init_data, agent)
-            case _:
-                raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)
 
     @staticmethod
     @by_transaction
@@ -203,3 +196,12 @@ class AccountsService(metaclass=SingletonMeta):
         account.network.reset()
 
         return account
+
+    async def __get_token_for_game(self, game_id: Game.GAMES_LITERAL, body: "AccountLinkPutBody", agent: str) -> str:
+        """Получение токена для игры."""
+        match game_id:
+            case Game.LITERAL_HAMSTER_KOMBAT:
+                raw_init_data = await syncp(get_raw_init_data)(body.init_data)
+                return await self._hamster_client.auth_tg_webapp(raw_init_data, agent)
+            case _:
+                raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)
