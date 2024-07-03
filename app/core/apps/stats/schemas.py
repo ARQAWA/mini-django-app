@@ -10,7 +10,7 @@ class PlayModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Play
-        fields = "__all__"
+        exclude = ("id", "account")
 
 
 class NetworkModelSchema(ModelSchema):
@@ -20,4 +20,4 @@ class NetworkModelSchema(ModelSchema):
         """Метаданные схемы."""
 
         model = Network
-        fields = "__all__"
+        exclude = ("id", "account")
