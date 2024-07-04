@@ -1,7 +1,13 @@
+from typing import cast
+
+import orjson
+
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
+from app.core.common.executors import synct
 from app.core.common.singleton import SingletonMeta
 from app.core.libs.httpx_ import httpx_client
+from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
 
 
 class TMAHamsterKombat(metaclass=SingletonMeta):
@@ -12,6 +18,18 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
     def __init__(self) -> None:
         self._httpx_client = httpx_client
+
+    @staticmethod
+    def __get_headers(token: str | None, user_agent: str) -> dict[str, str]:
+        """Получить заголовки для запроса к TMA Hamster Kombat."""
+        return {
+            "User-Agent": user_agent,
+            "Authorization": ("Bearer " + token) if token is not None else "authToken is empty, store token null",
+            "Origin": "https://hamsterkombat.io",
+            "Referer": "https://hamsterkombat.io/",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+        }
 
     async def auth_tg_webapp(self, raw_initdata: str, user_agent: str) -> str:
         """
@@ -35,14 +53,31 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         return res.text.split('"authToken":"')[1].split('"')[0]
 
-    @staticmethod
-    def __get_headers(token: str | None, user_agent: str) -> dict[str, str]:
-        """Получить заголовки для запроса к TMA Hamster Kombat."""
-        return {
-            "User-Agent": user_agent,
-            "Authorization": ("Bearer " + token) if token is not None else "authToken is empty, store token null",
-            "Origin": "https://hamsterkombat.io",
-            "Referer": "https://hamsterkombat.io/",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
-        }
+    async def sync(self, token: str, user_agent: str) -> ClickerUserDict | None:
+        """
+        Получить данные пользователя.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :return: Данные пользователя.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/sync",
+            headers=self.__get_headers(token, user_agent),
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"clickerUser"' not in res.content
+        if not fial_check:
+            jres = cast(dict[str, ClickerUserDict], await synct(orjson.loads)(res.content))
+            fial_check = "clickerUser" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return jres["clickerUser"]

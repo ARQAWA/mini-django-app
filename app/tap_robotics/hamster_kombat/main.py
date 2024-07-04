@@ -64,6 +64,5 @@ async def run_account(acc: AccInfo) -> None:
             auth_token=acc["auth_token"],
             user_agent=acc["user_agent"],
             action="sync",
-            next_action="tap_hamster",
         )
     )
