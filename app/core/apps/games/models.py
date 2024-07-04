@@ -1,6 +1,6 @@
 from django.db import models
 
-from app.core.common.db_date import utc_now_plus_month
+from app.core.common.db_date import utc_now, utc_now_plus_month
 
 
 class Account(models.Model):
@@ -46,3 +46,16 @@ class Slot(models.Model):
 
     def __str__(self) -> str:
         return "Empty Slot" if not self.account else str(self.account)
+
+
+class Session(models.Model):
+    """Модель сессии."""
+
+    account = models.OneToOneField(
+        "games.Account",
+        on_delete=models.CASCADE,
+        help_text="Account",
+        related_name="session",
+    )
+    errors = models.IntegerField(default=0, help_text="Errors Streak Counter")
+    next_at = models.DateTimeField(default=utc_now, help_text="Next at")

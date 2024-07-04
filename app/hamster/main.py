@@ -30,7 +30,7 @@ def run() -> None:  # noqa: C901
     user_data = hamster_client.taps(user_data)
 
     # Fetch tasks
-    if TIMERS.DAILY <= time.time():
+    if time.time() >= TIMERS.DAILY:
         tasks = hamster_client.get_tasks()
         for task in tasks:
             if task["isCompleted"]:

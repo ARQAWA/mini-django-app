@@ -68,6 +68,9 @@ run-tg-bot:
 run-hamster:
 	@python3 -m app.hamster.main
 
+run-tap-robotics-hamster:
+	@python3 -m app.tap_robotics.hamster_kombat
+
 deploy:
 	@echo "Deploying to production"
 	@docker compose down && docker compose up --build -d && docker compose logs --tail=3 -f

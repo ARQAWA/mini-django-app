@@ -1,6 +1,5 @@
 from typing import TypedDict
 
-
 # class LinkWithLocale(TypedDict):
 #     """The link with locale object."""
 #     locale: str
@@ -15,6 +14,7 @@ from typing import TypedDict
 
 class Task(TypedDict, total=False):
     """The task object."""
+
     id: str
     # rewardCoins: int
     # periodicity: str
