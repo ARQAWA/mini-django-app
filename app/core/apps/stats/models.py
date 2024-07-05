@@ -6,28 +6,10 @@ class Play(models.Model):
 
     account = models.OneToOneField("games.Account", on_delete=models.CASCADE, help_text="Account", related_name="play")
 
-    balance = models.BigIntegerField(default=0, help_text="Balance")
-    pph = models.BigIntegerField(default=0, help_text="PPH")
-
-    pphd = models.BigIntegerField(default=0, help_text="Stat PPHD")
-    taps = models.BigIntegerField(default=0, help_text="Stat Taps")
-    cards = models.BigIntegerField(default=0, help_text="Stat Bought Cards")
-    tasks = models.BigIntegerField(default=0, help_text="Stat Tasks")
-    combos = models.BigIntegerField(default=0, help_text="Stat Combos")
-    ciphers = models.BigIntegerField(default=0, help_text="Stat Ciphers")
+    stats_dict = models.JSONField(default=dict, help_text="Stats Dict")
 
     def __str__(self) -> str:
-        return f"{self.account} / Balance: {self.balance / 1_000_000:.2f}M"
-
-    def reset(self) -> None:
-        """Сброс статистики."""
-        self.pphd = 0
-        self.taps = 0
-        self.cards = 0
-        self.tasks = 0
-        self.combos = 0
-        self.ciphers = 0
-        self.save()
+        return f"{self.account} / Balance: {self.stats_dict["balance"] / 1_000_000:.2f}M"
 
 
 class Network(models.Model):

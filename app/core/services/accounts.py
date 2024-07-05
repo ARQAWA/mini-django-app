@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
+from app.core.apps.stats.dicts.hamster import HamsterStatsSchema
 from app.core.apps.stats.models import Network as NetworkStats
 from app.core.apps.stats.models import Play as PlayStats
 from app.core.clients.tma_hamster import TMAHamsterKombat
@@ -45,7 +46,7 @@ class AccountsService(metaclass=SingletonMeta):
     async def unlink(
         self,
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
     ) -> None:
         """
@@ -60,7 +61,7 @@ class AccountsService(metaclass=SingletonMeta):
     async def switch(
         self,
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
         play: bool,
     ) -> Account:
@@ -85,11 +86,11 @@ class AccountsService(metaclass=SingletonMeta):
         """
         return cast(Account, await synct(self.__reset)(customer_id, game_id, slot_id))
 
-    @staticmethod
     @by_transaction
     def __link(
+        self,
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
         body: "AccountLinkPutBody",
         auth_token: str,
@@ -112,7 +113,7 @@ class AccountsService(metaclass=SingletonMeta):
         )
 
         if is_created:
-            PlayStats.objects.create(account=account)
+            PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
             NetworkStats.objects.create(account=account)
 
         slot: Slot | None = Slot.objects.filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
@@ -134,7 +135,7 @@ class AccountsService(metaclass=SingletonMeta):
     @by_transaction
     def __unlink(
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
     ) -> None:
         """Отвязка аккаунта от слота."""
@@ -151,7 +152,7 @@ class AccountsService(metaclass=SingletonMeta):
     @by_transaction
     def __switch(
         customer_id: int,
-        game_id: str,
+        game_id: Game.GAMES_LITERAL,
         slot_id: int,
         play: bool,
     ) -> Account:
@@ -175,9 +176,8 @@ class AccountsService(metaclass=SingletonMeta):
 
         return account
 
-    @staticmethod
     @by_transaction
-    def __reset(customer_id: int, game_id: str, slot_id: int) -> Account:
+    def __reset(self, customer_id: int, game_id: Game.GAMES_LITERAL, slot_id: int) -> Account:
         """Сброс статистики аккаунта в слоте игры."""
         account: Account | None = (
             Account.objects.filter(
@@ -192,10 +192,31 @@ class AccountsService(metaclass=SingletonMeta):
         if account is None:
             raise ApiError.failed_dependency(ErrorsPhrases.ACCOUNT_NOT_FOUND)
 
-        account.play.reset()
+        self.__reset_stats_by_game(game_id, account)
         account.network.reset()
 
         return account
+
+    @staticmethod
+    def __create_stats_by_game(game_id: Game.GAMES_LITERAL) -> dict[str, Any]:
+        """Создание статистики аккаунта в слоте игры."""
+        match game_id:
+            case Game.LITERAL_HAMSTER_KOMBAT:
+                return cast(dict[str, Any], HamsterStatsSchema.get_hamster_dict())
+            case _:
+                raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)
+
+    @staticmethod
+    def __reset_stats_by_game(game_id: Game.GAMES_LITERAL, account: Account) -> None:
+        """Сброс статистики аккаунта в слоте игры."""
+        match game_id:
+            case Game.LITERAL_HAMSTER_KOMBAT:
+                reseted_stats = HamsterStatsSchema.get_hamster_dict()
+            case _:
+                raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)
+
+        account.play.stats_dict = reseted_stats
+        account.play.save()
 
     async def __get_token_for_game(self, game_id: Game.GAMES_LITERAL, body: "AccountLinkPutBody", agent: str) -> str:
         """Получение токена для игры."""

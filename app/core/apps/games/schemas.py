@@ -1,10 +1,11 @@
 from datetime import datetime
+from typing import Any
 
 from ninja import ModelSchema
 from pydantic import Field
 
 from app.core.apps.games.models import Account, Slot
-from app.core.apps.stats.schemas import NetworkModelSchema, PlayModelSchema
+from app.core.apps.stats.schemas import NetworkModelSchema
 
 
 class AccountModelSchema(ModelSchema):
@@ -17,7 +18,7 @@ class AccountModelSchema(ModelSchema):
 
     proxy_url: str | None = Field(title="URL прокси")
 
-    play_stats: PlayModelSchema = Field(alias="play", title="Статистика игры")
+    play_stats: dict[str, Any] = Field(alias="play.stats_dict", title="Статистика игры")
     network_stats: NetworkModelSchema = Field(alias="network", title="Статистика сети")
 
     is_playing: bool = Field(default=False, title="Играет ли аккаунт")
