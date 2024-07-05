@@ -49,7 +49,7 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         logger.error(f"Failed to sync account {task.account_id}: {err}")
         return
 
-    logger.info(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
+    logger.debug(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
     await task_queue.put(
         task.next(
             action="execute_tasks",

@@ -67,7 +67,7 @@ async def buy_upgrades_hamster_kombat(task: HamsterTask) -> None:
 #             continue
 #
 #     redis_checkout_tasks(check_key)
-#     logger.info(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
+#     logger.debug(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
 #     await task_queue.put(
 #         task.next(
 #             action="buy_upgrades",
