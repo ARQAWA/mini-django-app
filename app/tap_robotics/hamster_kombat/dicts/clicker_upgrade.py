@@ -12,7 +12,6 @@ class ClickerUpgradeDict(TypedDict):
     cooldownSeconds: int | None
 
 
-
 class ClickerDailyComboDict(TypedDict):
     """Clicker daily combo dict."""
 

@@ -1,20 +1,10 @@
-import asyncio
-from functools import partial
-
-from httpx import HTTPStatusError
-from loguru import logger
-
-from app.core.apps.core.models import Game
-from app.core.clients.tma_hamster import TMAHamsterKombat
-from app.core.common.executors import synct
-from app.core.libs.redis_ import redis_client
-from app.core.services.network_stats import write_network_stats
-from app.tap_robotics.hamster_kombat.common import task_queue
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 
 
 async def buy_upgrades_hamster_kombat(task: HamsterTask) -> None:
     """Задача на покупку апгрейдов."""
+
+
 #     check_key = f"{Game.LITERAL_HAMSTER_KOMBAT}:execute_tasks:{task.account_id}"
 #
 #     if await redis_client.exists(check_key):

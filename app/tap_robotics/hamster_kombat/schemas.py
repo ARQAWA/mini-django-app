@@ -10,6 +10,7 @@ task_action = Literal[
     "tap_hamster",
     "execute_tasks",
     "buy_upgrades",
+    "finish",
 ]
 
 

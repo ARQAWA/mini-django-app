@@ -9,6 +9,7 @@ from app.core.common.executors import synct
 from app.core.common.singleton import SingletonMeta
 from app.core.libs.httpx_ import httpx_client
 from app.tap_robotics.hamster_kombat.dicts.clicker_tasks import ClickerTaskDict
+from app.tap_robotics.hamster_kombat.dicts.clicker_upgrade import ClickerDailyComboDict, ClickerUpgradeDict
 from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
 
 
@@ -207,7 +208,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
-    ) -> list:
+    ) -> tuple[list[ClickerUpgradeDict], ClickerDailyComboDict]:
         """
         Получить список апгрейдов.
 
@@ -216,17 +217,20 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         :return: Список апгрейдов.
         """
         res = await self._httpx_client.post(
-            f"{self._base_url}/get-upgrades-list",
+            f"{self._base_url}/upgrades-for-buy",
             headers=self.__get_headers(token, user_agent),
         )
 
         res = res.raise_for_status()
 
         jres = {}
-        fial_check = b'"upgrades":{' not in res.content
+        fial_check = b'"upgradesForBuy":{' not in res.content
         if not fial_check:
-            jres = cast(dict, await synct(orjson.loads)(res.content))
-            fial_check = "upgrades" not in jres
+            jres = cast(
+                dict[str, list[ClickerUpgradeDict] | ClickerDailyComboDict],
+                await synct(orjson.loads)(res.content),
+            )
+            fial_check = "upgradesForBuy" not in jres
 
         if fial_check:
             raise ApiError.failed_dependency(
@@ -234,4 +238,53 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
                 (res.status_code, res.content),
             )
 
-        return jres["upgrades"]
+        return (
+            cast(list[ClickerUpgradeDict], jres["upgradesForBuy"]),
+            cast(ClickerDailyComboDict, jres["dailyCombo"]),
+        )
+
+    async def buy_upgrade(
+        self,
+        token: str,
+        user_agent: str,
+        upgrade_id: str,
+    ) -> tuple[ClickerUserDict, list[ClickerUpgradeDict], ClickerDailyComboDict]:
+        """
+        Купить апгрейд.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :param upgrade_id: Идентификатор апгрейда.
+        :return: Данные пользователя.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/buy-upgrade",
+            headers=self.__get_headers(token, user_agent),
+            json={
+                "upgradeId": upgrade_id,
+                "timestamp": int(time.time()),
+            },
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"clickerUser":{' not in res.content
+        if not fial_check:
+            jres = cast(
+                dict[str, ClickerUserDict | list[ClickerUpgradeDict] | ClickerDailyComboDict],
+                await synct(orjson.loads)(res.content),
+            )
+            fial_check = "clickerUser" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return (
+            cast(ClickerUserDict, jres["clickerUser"]),
+            cast(list[ClickerUpgradeDict], jres["upgradesForBuy"]),
+            cast(ClickerDailyComboDict, jres["dailyCombo"]),
+        )
