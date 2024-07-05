@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 from app.tap_robotics.hamster_kombat.dicts.clicker_tasks import ClickerTaskDict
 from app.tap_robotics.hamster_kombat.dicts.clicker_upgrade import ClickerUpgradeDict
@@ -35,6 +35,8 @@ class HamsterTask:
     tasks: list[ClickerTaskDict] = field(default_factory=list)
     upgrades: list[ClickerUpgradeDict] = field(default_factory=list)
 
+    stats_dict: dict[str, Any] = field(default_factory=dict)
+
     def next(
         self,
         action: task_action,
@@ -42,6 +44,7 @@ class HamsterTask:
         user: ClickerUserDict | None = None,
         tasks: list[ClickerTaskDict] | None = None,
         upgrades: list[ClickerUpgradeDict] | None = None,
+        stats_dict: dict[str, Any] | None = None,
     ) -> "HamsterTask":
         """Следующее действие."""
         return HamsterTask(
@@ -52,4 +55,5 @@ class HamsterTask:
             user=user or self.user,
             tasks=tasks or self.tasks,
             upgrades=upgrades or self.upgrades,
+            stats_dict=stats_dict or self.stats_dict,
         )
