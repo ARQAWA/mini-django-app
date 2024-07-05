@@ -202,3 +202,36 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
             )
 
         return jres["clickerUser"]
+
+    async def get_upgrades_list(
+        self,
+        token: str,
+        user_agent: str,
+    ) -> list:
+        """
+        Получить список апгрейдов.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :return: Список апгрейдов.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/get-upgrades-list",
+            headers=self.__get_headers(token, user_agent),
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"upgrades":{' not in res.content
+        if not fial_check:
+            jres = cast(dict, await synct(orjson.loads)(res.content))
+            fial_check = "upgrades" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return jres["upgrades"]

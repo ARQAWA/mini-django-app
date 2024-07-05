@@ -36,13 +36,14 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         user = await client.tap_hamster(task.auth_token, task.user_agent, count, available_taps)
     except HTTPStatusError as err:
         logger.error(f"Failed to sync account {task.account_id}: {err}")
-        func_write = partial(
-            write_network_stats,
-            account_id=task.account_id,
-            success=0,
-            error_code={str(err.response.status_code): 1},
-        )
-        await synct(func_write)()
+        await synct(
+            partial(
+                write_network_stats,
+                account_id=task.account_id,
+                success=0,
+                error_code={str(err.response.status_code): 1},
+            )
+        )()
         return
     except Exception as err:
         logger.error(f"Failed to sync account {task.account_id}: {err}")
