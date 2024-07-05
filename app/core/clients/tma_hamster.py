@@ -8,6 +8,7 @@ from app.core.common.error import ApiError
 from app.core.common.executors import synct
 from app.core.common.singleton import SingletonMeta
 from app.core.libs.httpx_ import httpx_client
+from app.tap_robotics.hamster_kombat.dicts.clicker_tasks import ClickerTaskDict
 from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
 
 
@@ -70,7 +71,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         res = res.raise_for_status()
 
         jres = {}
-        fial_check = b'"clickerUser"' not in res.content
+        fial_check = b'"clickerUser":{' not in res.content
         if not fial_check:
             jres = cast(dict[str, ClickerUserDict], await synct(orjson.loads)(res.content))
             fial_check = "clickerUser" not in jres
@@ -112,7 +113,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         res = res.raise_for_status()
 
         jres = {}
-        fial_check = b'"clickerUser"' not in res.content
+        fial_check = b'"clickerUser":{' not in res.content
         if not fial_check:
             jres = cast(dict[str, ClickerUserDict], await synct(orjson.loads)(res.content))
             fial_check = "clickerUser" not in jres
@@ -124,3 +125,32 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
             )
 
         return jres["clickerUser"]
+
+    async def get_tasks(self, token: str, user_agent: str) -> list[ClickerTaskDict]:
+        """
+        Получить список задач.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :return: Список задач.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/list-tasks",
+            headers=self.__get_headers(token, user_agent),
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"tasks":[' not in res.content
+        if not fial_check:
+            jres = cast(dict[str, list[ClickerTaskDict]], await synct(orjson.loads)(res.content))
+            fial_check = "tasks" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return jres["tasks"]

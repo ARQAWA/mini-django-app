@@ -12,7 +12,7 @@ from typing import TypedDict
 #     rewardCoins: int
 
 
-class Task(TypedDict, total=False):
+class Task(TypedDict):
     """The task object."""
 
     id: str
