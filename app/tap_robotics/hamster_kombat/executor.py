@@ -21,5 +21,7 @@ async def task_executor() -> None:
             case "execute_tasks":
                 logger.debug(f"Checking tasks for account {task.account_id}")
                 await execute_tasks_hamster_kombat(task)
+            case "buy_upgrades":
+                logger.debug(f"Buying upgrades for account {task.account_id}")
             case _:
                 logger.debug(f"Unknown action {task.action} for account {task.account_id}")

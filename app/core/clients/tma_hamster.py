@@ -33,7 +33,11 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
             "Cache-Control": "no-cache",
         }
 
-    async def auth_tg_webapp(self, raw_initdata: str, user_agent: str) -> str:
+    async def auth_tg_webapp(
+        self,
+        raw_initdata: str,
+        user_agent: str,
+    ) -> str:
         """
         Авторизация в TMA Hamster Kombat через Telegram WebApp.
 
@@ -55,7 +59,11 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         return res.text.split('"authToken":"')[1].split('"')[0]
 
-    async def sync(self, token: str, user_agent: str) -> ClickerUserDict:
+    async def sync(
+        self,
+        token: str,
+        user_agent: str,
+    ) -> ClickerUserDict:
         """
         Получить данные пользователя.
 
@@ -126,7 +134,11 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         return jres["clickerUser"]
 
-    async def get_tasks(self, token: str, user_agent: str) -> list[ClickerTaskDict]:
+    async def get_tasks(
+        self,
+        token: str,
+        user_agent: str,
+    ) -> list[ClickerTaskDict]:
         """
         Получить список задач.
 
@@ -154,3 +166,39 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
             )
 
         return jres["tasks"]
+
+    async def complete_task(
+        self,
+        token: str,
+        user_agent: str,
+        task_id: str,
+    ) -> ClickerUserDict:
+        """
+        Завершить задачу.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :param task_id: Идентификатор задачи.
+        :return: True, если задачи есть, иначе False.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/check-task",
+            headers=self.__get_headers(token, user_agent),
+            json={"taskId": task_id},
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"clickerUser":{' not in res.content
+        if not fial_check:
+            jres = cast(dict[str, ClickerUserDict], await synct(orjson.loads)(res.content))
+            fial_check = "clickerUser" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return jres["clickerUser"]
