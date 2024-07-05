@@ -17,5 +17,7 @@ async def task_executor() -> None:
             case "tap_hamster":
                 logger.debug(f"Tapping hamster for account {task.account_id}")
                 await tap_hamster_hamster_kombat(task)
+            case "execute_tasks":
+                logger.debug(f"Checking tasks for account {task.account_id}")
             case _:
                 logger.debug(f"Unknown action {task.action} for account {task.account_id}")

@@ -13,3 +13,4 @@ class ClickerUserDict(TypedDict):
     earnPassivePerHour: int
     lastPassiveEarn: float
     tapsRecoverPerSec: int
+    lastSyncUpdate: int

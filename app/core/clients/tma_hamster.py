@@ -1,3 +1,4 @@
+import time
 from typing import cast
 
 import orjson
@@ -53,7 +54,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         return res.text.split('"authToken":"')[1].split('"')[0]
 
-    async def sync(self, token: str, user_agent: str) -> ClickerUserDict | None:
+    async def sync(self, token: str, user_agent: str) -> ClickerUserDict:
         """
         Получить данные пользователя.
 
@@ -64,6 +65,48 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         res = await self._httpx_client.post(
             f"{self._base_url}/sync",
             headers=self.__get_headers(token, user_agent),
+        )
+
+        res = res.raise_for_status()
+
+        jres = {}
+        fial_check = b'"clickerUser"' not in res.content
+        if not fial_check:
+            jres = cast(dict[str, ClickerUserDict], await synct(orjson.loads)(res.content))
+            fial_check = "clickerUser" not in jres
+
+        if fial_check:
+            raise ApiError.failed_dependency(
+                ErrorsPhrases.HAMSTER_CLIENT_ERROR,
+                (res.status_code, res.content),
+            )
+
+        return jres["clickerUser"]
+
+    async def tap_hamster(
+        self,
+        token: str,
+        user_agent: str,
+        count: int,
+        available_taps: int,
+    ) -> ClickerUserDict:
+        """
+        Тапнуть хомяка.
+
+        :param token: Токен авторизации.
+        :param user_agent: User-Agent.
+        :param count: Количество тапов.
+        :param available_taps: Доступные тапы.
+        :return: Данные пользователя.
+        """
+        res = await self._httpx_client.post(
+            f"{self._base_url}/tap",
+            headers=self.__get_headers(token, user_agent),
+            json={
+                "count": count,
+                "availableTaps": available_taps,
+                "timestamp": int(time.time()),
+            },
         )
 
         res = res.raise_for_status()
