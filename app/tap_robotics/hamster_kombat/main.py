@@ -9,7 +9,7 @@ from loguru import logger
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Session
 from app.core.common.executors import synct
-from app.tap_robotics.hamster_kombat.common import task_queue
+from app.tap_robotics.hamster_kombat.common.queue import task_queue
 from app.tap_robotics.hamster_kombat.executor import task_executor
 from app.tap_robotics.hamster_kombat.schemas import AccInfo, HamsterTask
 

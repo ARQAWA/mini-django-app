@@ -224,7 +224,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         res = res.raise_for_status()
 
         jres = {}
-        fial_check = b'"upgradesForBuy":{' not in res.content
+        fial_check = b'"upgradesForBuy":[' not in res.content
         if not fial_check:
             jres = cast(
                 dict[str, list[ClickerUpgradeDict] | ClickerDailyComboDict],

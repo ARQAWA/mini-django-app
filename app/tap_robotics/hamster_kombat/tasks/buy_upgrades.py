@@ -1,72 +1,87 @@
+from typing import cast
+
+from httpx import HTTPStatusError
+from loguru import logger
+
+from app.core.clients.tma_hamster import TMAHamsterKombat
+from app.core.common.executors import syncp
+from app.tap_robotics.hamster_kombat.common.queue import task_queue
+from app.tap_robotics.hamster_kombat.common.wrapper import FailResult, wrap_http_request
+from app.tap_robotics.hamster_kombat.dicts.clicker_upgrade import ClickerDailyComboDict, ClickerUpgradeDict
+from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
+from app.tap_robotics.hamster_kombat.isolated.get_most_profitable_upgrade import get_most_profitable_upgrades
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 
 
 async def buy_upgrades_hamster_kombat(task: HamsterTask) -> None:
     """Задача на покупку апгрейдов."""
+    client = TMAHamsterKombat()
+
+    if task.user is None:
+        logger.error(f"User is None for account {task.account_id}")
+        return
+
+    result = await wrap_http_request(
+        client.get_upgrades_list(task.auth_token, task.user_agent),
+        task.account_id,
+        f"Failed to get upgrades list for account {task.account_id}",
+    )
+
+    if isinstance(result, (FailResult, HTTPStatusError)):
+        return
+
+    upgrades, _ = cast(tuple[list[ClickerUpgradeDict], ClickerDailyComboDict], result)  # noqa: F841
+    user, errors, success = await buy_upgrades(upgrades, task)
+    success += 1
+
+    logger.debug(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
+    await task_queue.put(
+        task.next(
+            action="finish",
+            user=user,
+            net_success=success,
+            net_errors=errors,
+        )
+    )
 
 
-#     check_key = f"{Game.LITERAL_HAMSTER_KOMBAT}:execute_tasks:{task.account_id}"
-#
-#     if await redis_client.exists(check_key):
-#         return
-#
-#     client = TMAHamsterKombat()
-#
-#     if task.user is None:
-#         logger.error(f"User is None for account {task.account_id}")
-#         return
-#
-#     try:
-#         tasks = await client.get_tasks(task.auth_token, task.user_agent)
-#     except HTTPStatusError as err:
-#         logger.error(f"Failed to sync account {task.account_id}: {err}")
-#         await synct(
-#             partial(
-#                 write_network_stats,
-#                 account_id=task.account_id,
-#                 success=0,
-#                 error_code={str(err.response.status_code): 1},
-#             )
-#         )()
-#         return
-#     except Exception as err:
-#         logger.error(f"Failed to sync account {task.account_id}: {err}")
-#         return
-#
-#     if not tasks:
-#         logger.debug(f"User {task.account_id} has no tasks")
-#         await task_queue.put(task.next(action="buy_upgrades", net_success=1))
-#         redis_checkout_tasks(check_key)
-#         return
-#
-#     user = task.user
-#     task_erros = {}
-#     success = 1
-#     for task_ in tasks:
-#         try:
-#             user = await client.complete_task(task.auth_token, task.user_agent, task_["id"])
-#             success += 1
-#         except HTTPStatusError as err:
-#             logger.error(f"Failed to sync account {task.account_id}: {err}")
-#             if (err_str := str(err.response.status_code)) in task_erros:
-#                 task_erros[err_str] = 0
-#             task_erros[err_str] += 1
-#             continue
-#         except Exception as err:
-#             logger.error(f"Failed to sync account {task.account_id}: {err}")
-#             continue
-#
-#     redis_checkout_tasks(check_key)
-#     logger.debug(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
-#     await task_queue.put(
-#         task.next(
-#             action="buy_upgrades",
-#             user=user,
-#             net_success=success,
-#         )
-#     )
-#
-#
-# def redis_checkout_tasks(check_key: str) -> None:
-#     """Checkout tasks."""
-#     asyncio.create_task(redis_client.set(check_key, 1, ex=7500))  # type: ignore
+async def buy_upgrades(
+    upgrades: list[ClickerUpgradeDict],
+    task: HamsterTask,
+) -> tuple[ClickerUserDict, dict[str, int], int]:
+    """Buy upgrades."""
+    client = TMAHamsterKombat()
+
+    success = 0
+    errors: dict[str, int] = {}
+    user = cast(ClickerUserDict, task.user)
+    while True:
+        upgrades = cast(list[ClickerUpgradeDict], await syncp(get_most_profitable_upgrades)(upgrades, 15))
+        for upgrade in upgrades:
+            if user["balanceCoins"] < upgrade["price"]:
+                continue
+
+            result = await wrap_http_request(
+                client.buy_upgrade(task.auth_token, task.user_agent, upgrade["id"]),
+                task.account_id,
+                f"Failed to buy upgrade {upgrade["id"]} for account {task.account_id}",
+            )
+
+            if isinstance(result, FailResult):
+                return user, errors, success
+
+            if isinstance(result, HTTPStatusError):
+                code_str = str(result.response.status_code)
+                errors[code_str] = errors.get(code_str, 0) + 1
+                return user, errors, success
+
+            success += 1
+            user, upgrades, _ = cast(  # noqa: F841
+                tuple[ClickerUserDict, list[ClickerUpgradeDict], ClickerDailyComboDict],
+                result,
+            )
+            break
+        else:
+            break
+
+    return user, errors, success

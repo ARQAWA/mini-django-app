@@ -1,13 +1,13 @@
-from functools import partial
 from typing import cast
 
 from httpx import HTTPStatusError
 from loguru import logger
 
 from app.core.clients.tma_hamster import TMAHamsterKombat
-from app.core.common.executors import syncp, synct
-from app.core.services.network_stats import write_network_stats
-from app.tap_robotics.hamster_kombat.common import task_queue
+from app.core.common.executors import syncp
+from app.tap_robotics.hamster_kombat.common.queue import task_queue
+from app.tap_robotics.hamster_kombat.common.wrapper import FailResult, wrap_http_request
+from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
 from app.tap_robotics.hamster_kombat.isolated.get_taps import get_available_taps
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 
@@ -31,23 +31,16 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         )
         return
 
-    try:
-        user = await client.tap_hamster(task.auth_token, task.user_agent, count, available_taps)
-    except HTTPStatusError as err:
-        logger.error(f"Failed to sync account {task.account_id}: {err}")
-        await synct(
-            partial(
-                write_network_stats,
-                account_id=task.account_id,
-                success=0,
-                error_code={str(err.response.status_code): 1},
-            )
-        )()
-        return
-    except Exception as err:
-        logger.error(f"Failed to sync account {task.account_id}: {err}")
+    result = await wrap_http_request(
+        client.tap_hamster(task.auth_token, task.user_agent, count, available_taps),
+        task.account_id,
+        f"Failed to tap account {task.account_id}",
+    )
+
+    if isinstance(result, (FailResult, HTTPStatusError)):
         return
 
+    user = cast(ClickerUserDict, result)
     logger.debug(f"Synced account {task.account_id} / Balance: {user["balanceCoins"]}")
     await task_queue.put(
         task.next(
