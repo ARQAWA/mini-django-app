@@ -1,4 +1,3 @@
-import time
 from functools import partial
 from typing import cast
 
@@ -6,10 +5,10 @@ from httpx import HTTPStatusError
 from loguru import logger
 
 from app.core.clients.tma_hamster import TMAHamsterKombat
-from app.core.common.executors import synct
+from app.core.common.executors import syncp, synct
 from app.core.services.network_stats import write_network_stats
 from app.tap_robotics.hamster_kombat.common import task_queue
-from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
+from app.tap_robotics.hamster_kombat.isolated.get_taps import get_available_taps
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 
 
@@ -21,7 +20,7 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         logger.error(f"User is None for account {task.account_id}")
         return
 
-    count, available_taps = cast(tuple[int, int], await synct(get_available_taps)(task.user))
+    count, available_taps = cast(tuple[int, int], await syncp(get_available_taps)(task.user))
 
     if not count:
         logger.debug(f"User {task.account_id} has no available taps")
@@ -57,24 +56,3 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
             net_success=1,
         )
     )
-
-
-def get_available_taps(user: ClickerUserDict) -> tuple[int, int]:
-    """
-    Получить тапы и доступные тапы.
-
-    :param user: Данные пользователя.
-    :return: Количество тапов и доступных тапов.
-    """
-    available_taps = user["availableTaps"]
-    extra_taps = int((time.time() - user["lastSyncUpdate"]) * user["tapsRecoverPerSec"])
-
-    if extra_taps > 0:
-        available_taps += extra_taps
-
-    if available_taps > user["maxTaps"]:
-        available_taps = user["maxTaps"]
-
-    count = available_taps // user["earnPerTap"]
-
-    return count, available_taps
