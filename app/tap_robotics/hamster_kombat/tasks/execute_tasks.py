@@ -13,11 +13,12 @@ from app.tap_robotics.hamster_kombat.common import task_queue
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 
 
-async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:
+async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:  # noqa: C901
     """Задача на выполнение задач."""
     check_key = f"{Game.LITERAL_HAMSTER_KOMBAT}:execute_tasks:{task.account_id}"
 
-    if await redis_client.exists(check_key):
+    if (await redis_client.get(check_key)) is not None:
+        logger.debug(f"Tasks for account {task.account_id} are already executing")
         return
 
     client = TMAHamsterKombat()
@@ -52,7 +53,11 @@ async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:
     user = task.user
     task_erros = {}
     success = 1
+
     for task_ in tasks:
+        if task_["isCompleted"]:
+            continue
+
         try:
             user = await client.complete_task(task.auth_token, task.user_agent, task_["id"])
             success += 1
