@@ -16,7 +16,7 @@ def write_play_stats(
     combos: int | None = None,
     ciphers: int | None = None,
 ) -> None:
-    """Записывает статистику игры в файл."""
+    """Записывает статистику игры."""
     play: Play | None = Play.objects.select_for_update().filter(account_id=account_id).first()
     if play is None:
         raise ApiError.not_found(ErrorsPhrases.PLAY_STATS_NOT_FOUND)

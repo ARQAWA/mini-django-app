@@ -13,6 +13,7 @@ class ModelEnum(Enum):
 class ErrorsPhrases(StrEnum):
     """Строки ошибок."""
 
+    NETWORK_STATS_NOT_FOUND = "NETWORK_STATS_NOT_FOUND"  # статистика сети не найдена
     PLAY_STATS_NOT_FOUND = "PLAY_STATS_NOT_FOUND"  # статистика игры не найдена
     GAME_NOT_FOUND = "GAME_NOT_FOUND"  # игра не найдена
     SLOT_NOT_FOUND = "SLOT_NOT_FOUND"  # слот не найден
