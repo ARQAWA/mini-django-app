@@ -1,17 +1,17 @@
 from typing import Any
 
 from django.http import HttpRequest
+from ninja import Router
 
 from app.api.v1.user.schemas import AuthHashPostBody, RefreshTokenPostBody, TgAuthResponse
 from app.core.apps.core.schemas import CustomerModelSchema
 from app.core.common.ninjas_fix.auth_dep import UserHttpRequest
-from app.core.common.ninjas_fix.router import Router
 from app.core.services.web_auth import WebAuthService
 
-router = Router(tags=["auth"])
+user_router = Router(tags=["auth"])
 
 
-@router.get(
+@user_router.get(
     "/me",
     summary="Получение информации о текущем пользователе",
     response={200: CustomerModelSchema},
@@ -21,7 +21,7 @@ async def get_user_info(request: UserHttpRequest) -> Any:
     return await WebAuthService().get_user_by_id(request.auth)
 
 
-@router.post(
+@user_router.post(
     "/auth",
     summary="Авторизация через hash авторизации",
     response={200: TgAuthResponse},
@@ -36,7 +36,7 @@ async def user_authorize(
     return dict(access=access, refresh=refresh)
 
 
-@router.post(
+@user_router.post(
     "/refresh",
     summary="Обновление токена",
     response={200: TgAuthResponse},

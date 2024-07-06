@@ -1,16 +1,17 @@
 from typing import Any
 
+from ninja import Router
+
 from app.api.v1.game.schemas import AccountLinkPutBody, AccountSwitchPlayPostBody
 from app.core.apps.core.models import Game
 from app.core.apps.games.schemas import AccountModelSchema
 from app.core.common.ninjas_fix.auth_dep import UserHttpRequest
-from app.core.common.ninjas_fix.router import Router
 from app.core.services.accounts import AccountsService
 
-router = Router(tags=["accounts"])
+accounts_router = Router(tags=["accounts"])
 
 
-@router.put(
+@accounts_router.put(
     "/{game_id}/slots/{slot_id}",
     summary="Привязка/обновление аккаунта в слоте игры",
     response={200: AccountModelSchema},
@@ -25,7 +26,7 @@ async def link_account(
     return await AccountsService().link(request.auth, game_id, slot_id, body)
 
 
-@router.delete(
+@accounts_router.delete(
     "/{game_id}/slots/{slot_id}",
     summary="Удаление аккаунта из слота игры",
     response={200: None},
@@ -39,7 +40,7 @@ async def delete_account(
     await AccountsService().unlink(request.auth, game_id, slot_id)
 
 
-@router.patch(
+@accounts_router.patch(
     "/{game_id}/slots/{slot_id}/activate",
     summary="Запуск/остановка работы аккаунта в слоте игры",
     response={200: AccountModelSchema},
@@ -54,7 +55,7 @@ async def switch_account(
     return await AccountsService().switch(request.auth, game_id, slot_id, body.play)
 
 
-@router.patch(
+@accounts_router.patch(
     "/{game_id}/slots/{slot_id}/reset",
     summary="Сброс статистики аккаунта в слоте игры",
     response={200: AccountModelSchema},
