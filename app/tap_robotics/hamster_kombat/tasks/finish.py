@@ -4,6 +4,7 @@ from loguru import logger
 
 from app.core.common.executors import synct
 from app.core.services.network_stats import write_network_stats
+from app.tap_robotics.hamster_kombat.checkout_session import write_checkpoint
 from app.tap_robotics.hamster_kombat.schemas import HamsterTask
 from app.tap_robotics.hamster_kombat.stats.play import write_play_stats
 
@@ -33,4 +34,5 @@ async def finish_hamster_kombat(task: HamsterTask) -> None:
         )
     )()
 
+    await synct(write_checkpoint)(task.account_id, len(task.net_errors) > 0)
     logger.debug(f"Finished account {task.account_id}")

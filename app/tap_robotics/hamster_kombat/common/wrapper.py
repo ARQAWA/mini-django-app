@@ -6,6 +6,7 @@ from loguru import logger
 
 from app.core.common.executors import synct
 from app.core.services.network_stats import write_network_stats
+from app.tap_robotics.hamster_kombat.checkout_session import write_checkpoint
 
 TCallable = TypeVar("TCallable", bound=Callable[..., Any])
 
@@ -34,6 +35,7 @@ async def wrap_http_request(
                     error_code={str(err.response.status_code): 1},
                 )
             )()
+            await synct(write_checkpoint)(account_id, True)
         return err
     except Exception as err:
         logger.error(f"{err_message}: {err}")
