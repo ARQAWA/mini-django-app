@@ -46,6 +46,7 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         task.next(
             action="execute_tasks",
             user=user,
+            stats_dict={"taps": count},
             net_success=1,
         )
     )

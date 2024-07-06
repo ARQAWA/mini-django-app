@@ -1,4 +1,5 @@
 import time
+from typing import cast
 
 from httpx import Client
 from loguru import logger
@@ -138,7 +139,7 @@ class HamsterClient:
         response = self._http.post("https://api.hamsterkombat.io/clicker/list-tasks")
 
         try:
-            jresponse = response.json()
+            jresponse = cast(dict[str, list[Task]], response.json())
         except Exception as err:
             logger.debug((err, response.status_code, response.text[:32]))
             return []

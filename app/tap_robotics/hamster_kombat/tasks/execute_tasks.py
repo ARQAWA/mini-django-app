@@ -77,6 +77,7 @@ async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:
         task.next(
             action="buy_upgrades",
             user=user,
+            stats_dict={"tasks": success - 1},
             net_success=success,
             net_errors=task_erros,
         )

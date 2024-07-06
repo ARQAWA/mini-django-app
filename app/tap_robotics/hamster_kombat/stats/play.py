@@ -21,8 +21,8 @@ def write_play_stats(
     if play is None:
         raise ApiError.not_found(ErrorsPhrases.PLAY_STATS_NOT_FOUND)
 
-    play.stats_dict["balance"] += balance
-    play.stats_dict["pph"] += pph
+    play.stats_dict["balance"] = balance
+    play.stats_dict["pph"] = pph
 
     if pphd is not None:
         play.stats_dict["pphd"] += pphd
