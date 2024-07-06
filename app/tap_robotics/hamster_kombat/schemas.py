@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
+from httpx import AsyncClient
+
 from app.tap_robotics.hamster_kombat.dicts.clicker_tasks import ClickerTaskDict
 from app.tap_robotics.hamster_kombat.dicts.clicker_upgrade import ClickerUpgradeDict
 from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
@@ -20,6 +22,7 @@ class AccInfo(TypedDict):
     id: int
     auth_token: str
     user_agent: str
+    proxy: str | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +34,8 @@ class HamsterTask:
     user_agent: str
 
     action: task_action
+
+    proxy_client: AsyncClient | None = field(default=None)
 
     user: ClickerUserDict | None = field(default=None)
     tasks: list[ClickerTaskDict] = field(default_factory=list)

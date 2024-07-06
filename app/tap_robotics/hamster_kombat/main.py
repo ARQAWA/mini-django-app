@@ -9,6 +9,7 @@ from loguru import logger
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Session
 from app.core.common.executors import synct
+from app.core.libs.httpx_ import get_proxy_client
 from app.tap_robotics.hamster_kombat.common.queue import task_queue
 from app.tap_robotics.hamster_kombat.executor import task_executor
 from app.tap_robotics.hamster_kombat.schemas import AccInfo, HamsterTask
@@ -37,7 +38,7 @@ def get_players() -> AccsResult:
             Q(slot__payment__is_payed=True, slot__expired_at__gt=Now()),
             Q(session__isnull=True) | Q(session__next_at__lte=Now()),
         )
-        .only("auth_token", "user_agent")
+        .only("auth_token", "user_agent", "proxy_url")
         .distinct()
     )
 
@@ -46,6 +47,7 @@ def get_players() -> AccsResult:
             "id": acc.id,
             "auth_token": acc.auth_token,
             "user_agent": acc.user_agent,
+            "proxy": acc.proxy_url,
         }
         for acc in accs
     ), accs.count()
@@ -55,7 +57,7 @@ async def run_account(acc: AccInfo) -> None:
     """Запуск аккаунта."""
     await Session.objects.aupdate_or_create(
         account_id=acc["id"],
-        defaults={"errors": 0, "next_at": Now() + timedelta(minutes=20)},
+        defaults={"errors": 0, "next_at": Now() + timedelta(minutes=60)},
     )
 
     await task_queue.put(
@@ -63,6 +65,7 @@ async def run_account(acc: AccInfo) -> None:
             account_id=acc["id"],
             auth_token=acc["auth_token"],
             user_agent=acc["user_agent"],
+            proxy_client=None if acc["proxy"] is None else get_proxy_client(acc["proxy"]),
             action="sync",
         )
     )

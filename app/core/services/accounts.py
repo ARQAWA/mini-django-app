@@ -12,6 +12,7 @@ from app.core.common.executors import syncp, synct
 from app.core.common.fake_ua import fake_user_agent
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
+from app.core.libs.httpx_ import get_proxy_client
 from app.core.services.tokens.hamster import get_raw_init_data
 
 if TYPE_CHECKING:
@@ -40,7 +41,7 @@ class AccountsService(metaclass=SingletonMeta):
         :param body: данные аккаунта
         :return: аккаунт
         """
-        token = await self.__get_token_for_game(game_id, body, agent := fake_user_agent.random)
+        token = await self.__get_token_for_game(game_id, body, agent := fake_user_agent.random, body.proxy)
         return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body, token, agent))
 
     async def unlink(
@@ -218,11 +219,18 @@ class AccountsService(metaclass=SingletonMeta):
         account.play.stats_dict = reseted_stats
         account.play.save()
 
-    async def __get_token_for_game(self, game_id: Game.GAMES_LITERAL, body: "AccountLinkPutBody", agent: str) -> str:
+    async def __get_token_for_game(
+        self,
+        game_id: Game.GAMES_LITERAL,
+        body: "AccountLinkPutBody",
+        agent: str,
+        proxy_url: str | None,
+    ) -> str:
         """Получение токена для игры."""
+        proxy_client = None if proxy_url is None else get_proxy_client(proxy_url)
         match game_id:
             case Game.LITERAL_HAMSTER_KOMBAT:
                 raw_init_data = await syncp(get_raw_init_data)(body.init_data)
-                return await self._hamster_client.auth_tg_webapp(raw_init_data, agent)
+                return await self._hamster_client.auth_tg_webapp(raw_init_data, agent, proxy_client)
             case _:
                 raise ApiError.bad_request(ErrorsPhrases.GAME_NOT_FOUND)

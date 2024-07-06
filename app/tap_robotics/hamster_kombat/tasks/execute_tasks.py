@@ -30,7 +30,7 @@ async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:
         return
 
     result = await wrap_http_request(
-        client.get_tasks(task.auth_token, task.user_agent),
+        client.get_tasks(task.auth_token, task.user_agent, task.proxy_client),
         task.account_id,
         f"Failed to get tasks for account {task.account_id}",
     )
@@ -54,7 +54,7 @@ async def execute_tasks_hamster_kombat(task: HamsterTask) -> None:
             continue
 
         result_ = await wrap_http_request(
-            client.complete_task(task.auth_token, task.user_agent, task_["id"]),
+            client.complete_task(task.auth_token, task.user_agent, task.proxy_client, task_["id"]),
             task.account_id,
             f"Failed to complete task {task_["id"]} for account {task.account_id}",
             False,

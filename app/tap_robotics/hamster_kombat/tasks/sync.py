@@ -15,7 +15,7 @@ async def sync_hamster_kombat(task: HamsterTask) -> None:
     client = TMAHamsterKombat()
 
     result = await wrap_http_request(
-        client.sync(task.auth_token, task.user_agent),
+        client.sync(task.auth_token, task.user_agent, task.proxy_client),
         task.account_id,
         f"Failed to sync account {task.account_id}",
     )

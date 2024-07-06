@@ -22,7 +22,7 @@ async def buy_upgrades_hamster_kombat(task: HamsterTask) -> None:
         return
 
     result = await wrap_http_request(
-        client.get_upgrades_list(task.auth_token, task.user_agent),
+        client.get_upgrades_list(task.auth_token, task.user_agent, task.proxy_client),
         task.account_id,
         f"Failed to get upgrades list for account {task.account_id}",
     )
@@ -64,7 +64,7 @@ async def buy_upgrades(
                 continue
 
             result = await wrap_http_request(
-                client.buy_upgrade(task.auth_token, task.user_agent, upgrade["id"]),
+                client.buy_upgrade(task.auth_token, task.user_agent, task.proxy_client, upgrade["id"]),
                 task.account_id,
                 f"Failed to buy upgrade {upgrade["id"]} for account {task.account_id}",
             )

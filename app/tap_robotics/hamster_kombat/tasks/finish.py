@@ -15,14 +15,7 @@ async def finish_hamster_kombat(task: HamsterTask) -> None:
         logger.error(f"User is None for account {task.account_id}")
         return
 
-    await synct(
-        partial(
-            write_network_stats,
-            account_id=task.account_id,
-            success=task.net_success,
-            error_code=task.net_errors,
-        )
-    )()
+    await synct(write_network_stats)(task.account_id, task.net_success, task.net_errors)
 
     await synct(
         partial(

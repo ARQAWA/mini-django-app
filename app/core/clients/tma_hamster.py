@@ -2,6 +2,7 @@ import time
 from typing import cast
 
 import orjson
+from httpx import AsyncClient
 
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
@@ -38,19 +39,24 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         raw_initdata: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
     ) -> str:
         """
         Авторизация в TMA Hamster Kombat через Telegram WebApp.
 
         :param raw_initdata: Сырые данные инициализации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :return: Токен авторизации.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_core}/auth/auth-by-telegram-webapp",
             headers=self.__get_headers(None, user_agent),
             json={"initDataRaw": raw_initdata},
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         if res.status_code == 400:
             raise ApiError.bad_request(ErrorsPhrases.NON_PLAYABLE_INITDATA_CORRUPTED, res.content)
@@ -64,18 +70,23 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
     ) -> ClickerUserDict:
         """
         Получить данные пользователя.
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :return: Данные пользователя.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/sync",
             headers=self.__get_headers(token, user_agent),
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 
@@ -97,6 +108,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
         count: int,
         available_taps: int,
     ) -> ClickerUserDict:
@@ -105,11 +117,13 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :param count: Количество тапов.
         :param available_taps: Доступные тапы.
         :return: Данные пользователя.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/tap",
             headers=self.__get_headers(token, user_agent),
             json={
@@ -118,6 +132,8 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
                 "timestamp": int(time.time()),
             },
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 
@@ -139,18 +155,23 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
     ) -> list[ClickerTaskDict]:
         """
         Получить список задач.
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :return: Список задач.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/list-tasks",
             headers=self.__get_headers(token, user_agent),
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 
@@ -172,6 +193,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
         task_id: str,
     ) -> ClickerUserDict:
         """
@@ -179,14 +201,18 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :param task_id: Идентификатор задачи.
         :return: True, если задачи есть, иначе False.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/check-task",
             headers=self.__get_headers(token, user_agent),
             json={"taskId": task_id},
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 
@@ -208,18 +234,23 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
     ) -> tuple[list[ClickerUpgradeDict], ClickerDailyComboDict]:
         """
         Получить список апгрейдов.
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :return: Список апгрейдов.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/upgrades-for-buy",
             headers=self.__get_headers(token, user_agent),
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 
@@ -247,6 +278,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         self,
         token: str,
         user_agent: str,
+        proxy_client: AsyncClient | None,
         upgrade_id: str,
     ) -> tuple[ClickerUserDict, list[ClickerUpgradeDict], ClickerDailyComboDict]:
         """
@@ -254,10 +286,12 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
 
         :param token: Токен авторизации.
         :param user_agent: User-Agent.
+        :param proxy_client: Клиент с Proxy сервером.
         :param upgrade_id: Идентификатор апгрейда.
         :return: Данные пользователя.
         """
-        res = await self._httpx_client.post(
+        cl = proxy_client or self._httpx_client
+        res = await cl.post(
             f"{self._base_url}/buy-upgrade",
             headers=self.__get_headers(token, user_agent),
             json={
@@ -265,6 +299,8 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
                 "timestamp": int(time.time()),
             },
         )
+        if proxy_client is not None:
+            await proxy_client.aclose()
 
         res = res.raise_for_status()
 

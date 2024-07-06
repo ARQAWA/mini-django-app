@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Any, Callable, Coroutine, TypeVar
 
 from httpx import HTTPStatusError
@@ -27,14 +26,7 @@ async def wrap_http_request(
     except HTTPStatusError as err:
         logger.error(f"{err_message}: {err}")
         if write_erros:
-            await synct(
-                partial(
-                    write_network_stats,
-                    account_id=account_id,
-                    success=0,
-                    error_code={str(err.response.status_code): 1},
-                )
-            )()
+            await synct(write_network_stats)(account_id, 0, {str(err.response.status_code): 1})
             await synct(write_checkpoint)(account_id, True)
         return err
     except Exception as err:

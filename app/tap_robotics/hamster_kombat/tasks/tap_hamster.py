@@ -32,7 +32,7 @@ async def tap_hamster_hamster_kombat(task: HamsterTask) -> None:
         return
 
     result = await wrap_http_request(
-        client.tap_hamster(task.auth_token, task.user_agent, count, available_taps),
+        client.tap_hamster(task.auth_token, task.user_agent, task.proxy_client, count, available_taps),
         task.account_id,
         f"Failed to tap account {task.account_id}",
     )
