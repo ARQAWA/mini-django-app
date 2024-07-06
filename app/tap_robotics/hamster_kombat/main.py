@@ -23,8 +23,8 @@ async def run_hamster() -> None:
 
     while True:
         accs, count = cast(AccsResult, await synct(get_players)())
-        logger.debug(f"Found {count} accounts to play")
         if count:
+            logger.debug(f"Found {count} accounts to play")
             await asyncio.gather(*(run_account(acc) for acc in accs))
         await asyncio.sleep(7)
 
