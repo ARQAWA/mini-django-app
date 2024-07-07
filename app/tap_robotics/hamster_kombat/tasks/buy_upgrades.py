@@ -58,7 +58,7 @@ async def buy_upgrades(
     errors: dict[str, int] = {}
     user = cast(ClickerUserDict, task.user)
     while True:
-        upgrades = cast(list[ClickerUpgradeDict], await syncp(get_most_profitable_upgrades)(upgrades, 15))
+        upgrades = cast(list[ClickerUpgradeDict], await syncp(get_most_profitable_upgrades)(upgrades, 15, 15))
         for upgrade in upgrades:
             if user["balanceCoins"] < upgrade["price"]:
                 continue

@@ -4,9 +4,10 @@ from app.tap_robotics.hamster_kombat.dicts.clicker_upgrade import ClickerUpgrade
 def get_most_profitable_upgrades(
     upgs: list[ClickerUpgradeDict],
     k: int,
+    max_level: int,
 ) -> list[ClickerUpgradeDict]:
     """Получить список самых прибыльных апгрейдов."""
-    return sorted(
+    ranked_sorted = sorted(
         (
             upg
             for upg in upgs
@@ -16,7 +17,9 @@ def get_most_profitable_upgrades(
             and not upg.get("cooldownSeconds")
         ),
         key=calculate_effective_pphd,
-    )[:k]
+    )
+
+    return [upg for idx, upg in enumerate(ranked_sorted) if idx < k or upg["level"] < max_level]
 
 
 def calculate_effective_pphd(upg: ClickerUpgradeDict) -> float:
