@@ -60,7 +60,7 @@ async def buy_upgrades(
     while True:
         upgrades = cast(list[ClickerUpgradeDict], await syncp(get_most_profitable_upgrades)(upgrades, 15))
         for upgrade in upgrades:
-            if user["balanceCoins"] < upgrade["price"]:
+            if (user["balanceCoins"] - user["earnPassivePerHour"]) < upgrade["price"]:
                 continue
 
             result = await wrap_http_request(
