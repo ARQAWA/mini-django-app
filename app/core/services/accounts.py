@@ -107,12 +107,18 @@ class AccountsService(metaclass=SingletonMeta):
             .split(",")[0],
         )
 
-        account, is_created = Account.objects.get_or_create(
-            slot_id=slot_id,
-            customer_id=customer_id,
-            game_id=game_id,
-            defaults=dict(
+        slot: Slot | None = (
+            Slot.objects.select_for_update().filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
+        )
+
+        if slot is None:
+            raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
+
+        if slot.account is None:
+            account = Account.objects.create(
                 tg_id=tg_id_from_initdata,
+                customer_id=customer_id,
+                game_id=game_id,
                 first_name=body.first_name,
                 last_name=body.last_name,
                 username=body.username,
@@ -120,26 +126,22 @@ class AccountsService(metaclass=SingletonMeta):
                 proxy_url=body.proxy,
                 auth_token=auth_token,
                 user_agent=user_agent,
-            ),
-        )
-
-        if not is_created:
-            account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{tg_id_from_initdata},'))
-            if account_sign not in account.init_data:
-                raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
-            account.init_data = body.init_data
-            account.proxy_url = body.proxy
-            account.save()
+            )
+            slot.account = account
+            slot.save()
+            PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
+            NetworkStats.objects.create(account=account)
             return Account.objects.select_related("play", "network").get(id=account.id)
 
-        PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
-        NetworkStats.objects.create(account=account)
+        account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{tg_id_from_initdata},'))
 
-        slot: Slot | None = Slot.objects.filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
-        if slot is None:
-            raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
-        slot.account = account
-        slot.save()
+        account = Account.objects.select_for_update().get(id=slot.account.id)
+        if account_sign not in account.init_data:
+            raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
+
+        account.init_data = body.init_data
+        account.proxy_url = body.proxy
+        account.save()
 
         return Account.objects.select_related("play", "network").get(id=account.id)
 
