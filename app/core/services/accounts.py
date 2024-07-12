@@ -1,8 +1,6 @@
 import urllib.parse
 from typing import TYPE_CHECKING, Any, cast
 
-from loguru import logger
-
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.dicts.hamster import HamsterStatsSchema
@@ -101,11 +99,20 @@ class AccountsService(metaclass=SingletonMeta):
         user_agent: str,
     ) -> Account:
         """Привязка аккаунта к слоту."""
-        account, is_created = Account.objects.update_or_create(
-            tg_id=body.tg_id,
+        tg_id_from_initdata = int(
+            urllib.parse.unquote(
+                urllib.parse.unquote(body.init_data),
+            )
+            .split('"id":')[1]
+            .split(",")[0],
+        )
+
+        account, is_created = Account.objects.get_or_create(
+            slot_id=slot_id,
             customer_id=customer_id,
             game_id=game_id,
             defaults=dict(
+                tg_id=tg_id_from_initdata,
                 first_name=body.first_name,
                 last_name=body.last_name,
                 username=body.username,
@@ -116,26 +123,21 @@ class AccountsService(metaclass=SingletonMeta):
             ),
         )
 
-        if is_created:
-            PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
-            NetworkStats.objects.create(account=account)
-        else:
-            account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{account.tg_id},'))
-            logger.error(account_sign)
-            logger.error(body.init_data)
-            if account_sign not in body.init_data:
+        if not is_created:
+            account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{tg_id_from_initdata},'))
+            if account_sign not in account.init_data:
                 raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
+            account.init_data = body.init_data
+            account.proxy_url = body.proxy
+            account.save()
+            return Account.objects.select_related("play", "network").get(id=account.id)
+
+        PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
+        NetworkStats.objects.create(account=account)
 
         slot: Slot | None = Slot.objects.filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
-
         if slot is None:
             raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
-
-        another_slot: Slot | None = Slot.objects.exclude(id=account.id).filter(account_id=account.id).first()
-        if another_slot is not None:
-            another_slot.account = None
-            another_slot.save()
-
         slot.account = account
         slot.save()
 
