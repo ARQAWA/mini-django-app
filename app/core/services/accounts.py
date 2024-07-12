@@ -1,3 +1,4 @@
+import urllib.parse
 from typing import TYPE_CHECKING, Any, cast
 
 from app.core.apps.core.models import Game
@@ -116,6 +117,10 @@ class AccountsService(metaclass=SingletonMeta):
         if is_created:
             PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
             NetworkStats.objects.create(account=account)
+        else:
+            account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{account.tg_id},'))
+            if account_sign not in body.init_data:
+                raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
 
         slot: Slot | None = Slot.objects.filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
 

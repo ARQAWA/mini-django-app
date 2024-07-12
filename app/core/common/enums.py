@@ -13,6 +13,7 @@ class ModelEnum(Enum):
 class ErrorsPhrases(StrEnum):
     """Строки ошибок."""
 
+    INITDATA_FROM_OTHER_ACCOUNT = "INITDATA_FROM_OTHER_ACCOUNT"  # данные инициализации от другого аккаунта
     NETWORK_STATS_NOT_FOUND = "NETWORK_STATS_NOT_FOUND"  # статистика сети не найдена
     PLAY_STATS_NOT_FOUND = "PLAY_STATS_NOT_FOUND"  # статистика игры не найдена
     GAME_NOT_FOUND = "GAME_NOT_FOUND"  # игра не найдена
