@@ -1,6 +1,8 @@
 import urllib.parse
 from typing import TYPE_CHECKING, Any, cast
 
+from loguru import logger
+
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.dicts.hamster import HamsterStatsSchema
@@ -119,6 +121,8 @@ class AccountsService(metaclass=SingletonMeta):
             NetworkStats.objects.create(account=account)
         else:
             account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{account.tg_id},'))
+            logger.error(account_sign)
+            logger.error(body.init_data)
             if account_sign not in body.init_data:
                 raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
 
