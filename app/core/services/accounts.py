@@ -4,13 +4,12 @@ from typing import TYPE_CHECKING, Any, cast
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.dicts.hamster import HamsterStatsSchema
-from app.core.apps.stats.models import Network as NetworkStats
-from app.core.apps.stats.models import Play as PlayStats
 from app.core.clients.tma_hamster import TMAHamsterKombat
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
-from app.core.common.executors import syncp, synct
+from app.core.common.executors import get_process_pool, syncp, synct
 from app.core.common.fake_ua import fake_user_agent
+from app.core.common.initdata import decode_initdata
 from app.core.common.singleton import SingletonMeta
 from app.core.common.threaded_transaction import by_transaction
 from app.core.libs.httpx_ import get_proxy_client
@@ -42,8 +41,9 @@ class AccountsService(metaclass=SingletonMeta):
         :param body: данные аккаунта
         :return: аккаунт
         """
+        account = await synct(self.__check_and_get_current_account)(customer_id, game_id, slot_id, body)
         token = await self.__get_token_for_game(game_id, body, agent := fake_user_agent.random, body.proxy)
-        return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body, token, agent))
+        return cast(Account, await synct(self.__link)(customer_id, game_id, slot_id, body, token, agent, account))
 
     async def unlink(
         self,
@@ -89,6 +89,39 @@ class AccountsService(metaclass=SingletonMeta):
         return cast(Account, await synct(self.__reset)(customer_id, game_id, slot_id))
 
     @by_transaction
+    def __check_and_get_current_account(
+        self,
+        customer_id: int,
+        game_id: Game.GAMES_LITERAL,
+        slot_id: int,
+        body: "AccountLinkPutBody",
+    ) -> Account | None:
+        """Проверка текущего аккаунта в слоте игры."""
+        slot: Slot | None = (
+            Slot.objects.select_for_update()
+            .select_related("account")
+            .filter(id=slot_id, customer_id=customer_id, game_id=game_id)
+            .first()
+        )
+
+        if slot is None:
+            raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
+
+        if slot.account_id is None:
+            return None
+
+        decoded_initdata: dict[str, str] = get_process_pool().submit(decode_initdata, body.init_data).result()
+        tg_id_from_initdata = decoded_initdata["user"].split('"id":')[1].split(",")[0].split("}")[0]
+
+        account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{tg_id_from_initdata},'))
+
+        account = cast(Account, slot.account)
+        if account_sign not in account.init_data:
+            raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
+
+        return account
+
+    @by_transaction
     def __link(
         self,
         customer_id: int,
@@ -97,52 +130,29 @@ class AccountsService(metaclass=SingletonMeta):
         body: "AccountLinkPutBody",
         auth_token: str,
         user_agent: str,
+        account: Account | None,
     ) -> Account:
         """Привязка аккаунта к слоту."""
-        tg_id_from_initdata = int(
-            urllib.parse.unquote(
-                urllib.parse.unquote(body.init_data),
-            )
-            .split('"id":')[1]
-            .split(",")[0],
-        )
-
-        slot: Slot | None = (
-            Slot.objects.select_for_update().filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
-        )
-
-        if slot is None:
-            raise ApiError.failed_dependency(ErrorsPhrases.SLOT_NOT_FOUND)
-
-        if slot.account is None:
-            account = Account.objects.create(
-                tg_id=tg_id_from_initdata,
-                customer_id=customer_id,
-                game_id=game_id,
-                first_name=body.first_name,
-                last_name=body.last_name,
-                username=body.username,
-                init_data=body.init_data,
-                proxy_url=body.proxy,
-                auth_token=auth_token,
-                user_agent=user_agent,
-            )
-            slot.account = account
-            slot.save()
-            PlayStats.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
-            NetworkStats.objects.create(account=account)
+        if account is not None:
+            account.init_data = body.init_data
+            account.proxy_url = body.proxy
+            account.save()
             return Account.objects.select_related("play", "network").get(id=account.id)
 
-        account_sign = urllib.parse.quote(urllib.parse.quote(f'"id":{tg_id_from_initdata},'))
+        account = Account.objects.create(
+            tg_id=body.tg_id,
+            customer_id=customer_id,
+            game_id=game_id,
+            first_name=body.first_name,
+            last_name=body.last_name,
+            username=body.username,
+            init_data=body.init_data,
+            proxy_url=body.proxy,
+            auth_token=auth_token,
+            user_agent=user_agent,
+        )
 
-        account = Account.objects.select_for_update().get(id=slot.account.id)
-        if account_sign not in account.init_data:
-            raise ApiError.conflict(ErrorsPhrases.INITDATA_FROM_OTHER_ACCOUNT)
-
-        account.init_data = body.init_data
-        account.proxy_url = body.proxy
-        account.save()
-
+        Slot.objects.filter(id=slot_id).update(account=account)
         return Account.objects.select_related("play", "network").get(id=account.id)
 
     @staticmethod
