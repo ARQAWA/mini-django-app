@@ -18,8 +18,8 @@ class HamsterClient:
 
         self._headers = {
             "Authorization": "Bearer " + envs.hamster.token,
-            "Origin": "https://hamsterkombat.io",
-            "Referer": "https://hamsterkombat.io/",
+            "Origin": "https://hamsterkombatgame.io",
+            "Referer": "https://hamsterkombatgame.io/",
             "User-Agent": envs.hamster.user_agent,
             "Pragma": "no-cache",
             "Cache-Control": "no-cache",
@@ -34,7 +34,7 @@ class HamsterClient:
         """Sync the user's data."""
         logger.debug("Syncing user data...")
 
-        response = self._http.post("https://api.hamsterkombat.io/clicker/sync")
+        response = self._http.post("https://api.hamsterkombatgame.io/clicker/sync")
 
         try:
             jresponse = response.json()["clickerUser"]
@@ -61,7 +61,7 @@ class HamsterClient:
         count = available_taps // clicker.earn_per_tap
 
         response = self._http.post(
-            "https://api.hamsterkombat.io/clicker/tap",
+            "https://api.hamsterkombatgame.io/clicker/tap",
             json={
                 "count": count,
                 "availableTaps": available_taps,
@@ -81,7 +81,7 @@ class HamsterClient:
         """Get the list of upgrades."""
         logger.debug("Fetching upgrades list...")
 
-        response = self._http.post("https://api.hamsterkombat.io/clicker/upgrades-for-buy")
+        response = self._http.post("https://api.hamsterkombatgame.io/clicker/upgrades-for-buy")
 
         try:
             jresponse = response.json()
@@ -99,7 +99,7 @@ class HamsterClient:
         )
 
         response = self._http.post(
-            "https://api.hamsterkombat.io/clicker/buy-upgrade",
+            "https://api.hamsterkombatgame.io/clicker/buy-upgrade",
             json={
                 "upgradeId": upgrade.id,
                 "timestamp": int(time.time()),
@@ -120,7 +120,7 @@ class HamsterClient:
         """Claim combo."""
         logger.debug("Claiming daily combo...")
 
-        response = self._http.post("https://api.hamsterkombat.io/clicker/claim-daily-combo")
+        response = self._http.post("https://api.hamsterkombatgame.io/clicker/claim-daily-combo")
 
         try:
             jresponse = response.json()
@@ -136,7 +136,7 @@ class HamsterClient:
         """Get tasks."""
         logger.debug("Fetching tasks...")
 
-        response = self._http.post("https://api.hamsterkombat.io/clicker/list-tasks")
+        response = self._http.post("https://api.hamsterkombatgame.io/clicker/list-tasks")
 
         try:
             jresponse = cast(dict[str, list[Task]], response.json())
@@ -151,7 +151,7 @@ class HamsterClient:
         logger.debug(f"Picking task {task_id}...")
 
         response = self._http.post(
-            "https://api.hamsterkombat.io/clicker/check-task",
+            "https://api.hamsterkombatgame.io/clicker/check-task",
             json={"taskId": task_id},
         )
 

@@ -17,7 +17,7 @@ from app.tap_robotics.hamster_kombat.dicts.clicker_user import ClickerUserDict
 class TMAHamsterKombat(metaclass=SingletonMeta):
     """Клиент для работы с TMA Hamster Kombat."""
 
-    _base_core = "https://api.hamsterkombat.io"
+    _base_core = "https://api.hamsterkombatgame.io"
     _base_url = f"{_base_core}/clicker"
 
     def __init__(self) -> None:
@@ -29,8 +29,8 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         return {
             "User-Agent": user_agent,
             "Authorization": ("Bearer " + token) if token is not None else "authToken is empty, store token null",
-            "Origin": "https://hamsterkombat.io",
-            "Referer": "https://hamsterkombat.io/",
+            "Origin": "https://hamsterkombatgame.io",
+            "Referer": "https://hamsterkombatgame.io/",
             "Pragma": "no-cache",
             "Cache-Control": "no-cache",
         }
