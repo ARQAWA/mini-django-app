@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 from app.core.apps.core.models import Game
 from app.core.apps.games.models import Account, Slot
 from app.core.apps.stats.dicts.hamster import HamsterStatsSchema
+from app.core.apps.stats.models import Play, Network
 from app.core.clients.tma_hamster import TMAHamsterKombat
 from app.core.common.enums import ErrorsPhrases
 from app.core.common.error import ApiError
@@ -150,6 +151,9 @@ class AccountsService(metaclass=SingletonMeta):
         )
 
         Slot.objects.filter(id=slot_id).update(account=account)
+        Play.objects.create(account=account, stats_dict=self.__create_stats_by_game(game_id))
+        Network.objects.create(account=account)
+
         return Account.objects.select_related("play", "network").get(id=account.id)
 
     @staticmethod
