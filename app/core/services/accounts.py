@@ -98,10 +98,7 @@ class AccountsService(metaclass=SingletonMeta):
     ) -> Account | None:
         """Проверка текущего аккаунта в слоте игры."""
         slot: Slot | None = (
-            Slot.objects.select_for_update()
-            .select_related("account")
-            .filter(id=slot_id, customer_id=customer_id, game_id=game_id)
-            .first()
+            Slot.objects.select_related("account").filter(id=slot_id, customer_id=customer_id, game_id=game_id).first()
         )
 
         if slot is None:
