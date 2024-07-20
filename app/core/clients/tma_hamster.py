@@ -28,7 +28,7 @@ class TMAHamsterKombat(metaclass=SingletonMeta):
         """Получить заголовки для запроса к TMA Hamster Kombat."""
         return {
             "User-Agent": user_agent,
-            "Authorization": ("Bearer " + token) if token is not None else "authToken is empty, store token null",
+            "Authorization": ("Bearer " + token) if token is not None else "",
             "Origin": "https://hamsterkombatgame.io",
             "Referer": "https://hamsterkombatgame.io/",
             "Pragma": "no-cache",
