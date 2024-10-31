@@ -27,14 +27,16 @@ services:
       - backend_bridge
     command: make run-tg-bot
 
-  hamster-rofl:
+  tap-robotics:
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
     env_file:
       - .env
-    command: make run-hamster
+    networks:
+      - backend_bridge
+    command: make run-tap-robotics-hamster
 
 networks:
   backend_bridge:

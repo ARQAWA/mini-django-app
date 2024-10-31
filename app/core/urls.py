@@ -1,6 +1,6 @@
 from django.urls import path
 
-from app.api import init_api
+from app.api.init import init_api
 
 api = init_api()
 

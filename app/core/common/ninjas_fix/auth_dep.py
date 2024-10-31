@@ -3,16 +3,29 @@ from django.http import HttpRequest as DjangoHttpRequest
 from ninja.security.base import SecuritySchema
 
 from app.core.common.error import UNATHORIZED_ERROR
-from app.core.models.user_data import UserData
+from app.core.envs import envs
 from app.core.services.web_auth import WebAuthService
 
 SECURITY_SCHEMA = SecuritySchema(type="http", scheme="bearer")
 
 
+def _extract_token(request: HttpRequest) -> str:
+    """Извлечение токена из запроса."""
+    if (
+        (token := request.headers.get("Authorization", None)) is None
+        or not isinstance(token, str)
+        or not (token := token.strip()).startswith("Bearer ")
+        or not (token := token[7:].strip())
+    ):
+        raise UNATHORIZED_ERROR
+
+    return token
+
+
 class UserHttpRequest(DjangoHttpRequest):
     """Класс для запроса с объектом авторизации."""
 
-    auth: UserData.Dict
+    auth: int
 
 
 class UserAuthDepends:
@@ -20,21 +33,29 @@ class UserAuthDepends:
 
     openapi_security_schema = SECURITY_SCHEMA
 
-    async def __call__(self, request: HttpRequest) -> UserData.Dict:
+    async def __call__(self, request: HttpRequest) -> int:
         """Получение объекта пользователя из заголовка Authorization."""
-        if (
-            (token := request.headers.get("Authorization", None)) is None
-            or not isinstance(token, str)
-            or not (token := token.strip()).startswith("Bearer ")
-            or not (token := token[7:].strip())
-        ):
+        token = _extract_token(request)
+
+        if (user_id := await WebAuthService().get_user_id_by_access(token)) is None:
             raise UNATHORIZED_ERROR
 
-        user = await WebAuthService().get_user_by_access(token)
-        if user is None:
+        return user_id
+
+
+class BrosSecretAuthDepends:
+    """Класс для секретного ключа."""
+
+    openapi_security_schema = SECURITY_SCHEMA
+
+    def __call__(self, request: HttpRequest) -> int:
+        """Проверка секретного ключа."""
+        token = _extract_token(request)
+
+        if token != envs.bros_secret_token:
             raise UNATHORIZED_ERROR
 
-        return user
+        return 1
 
 
-__all__ = ["UserAuthDepends", "UserHttpRequest", "UNATHORIZED_ERROR"]
+__all__ = ["UserAuthDepends", "UserHttpRequest", "BrosSecretAuthDepends", "UNATHORIZED_ERROR"]

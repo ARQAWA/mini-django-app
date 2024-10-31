@@ -28,19 +28,6 @@ class PostgresSettings(BaseModel):
     pool_max_size: int = 20
 
 
-class TelegramSettings(BaseModel):
-    """Настройки Telegram."""
-
-    token: str
-
-
-class HamsterSettings(BaseModel):
-    """Настройки Hamster."""
-
-    token: str
-    user_agent: str
-
-
 class RedisSettings(BaseModel):
     """Настройки Redis."""
 
@@ -54,6 +41,26 @@ class RedisSettings(BaseModel):
         return f"redis://{self.host}:{self.port}/{self.db}"
 
 
+class TelegramSettings(BaseModel):
+    """Настройки Telegram."""
+
+    token: str
+
+
+class TonClientSettings(BaseModel):
+    """Настройки TonClient."""
+
+    base_url: str
+    payment_address: str
+
+
+class HamsterSettings(BaseModel):
+    """Настройки Hamster."""
+
+    token: str
+    user_agent: str
+
+
 class Settings(BaseSettings):
     """Настройки приложения."""
 
@@ -61,10 +68,12 @@ class Settings(BaseSettings):
     django_secret_key: str
     django_settings_module: str
     allowed_hosts: str
+    bros_secret_token: str
     auth: AuthSettings = Field(default_factory=AuthSettings)
     sentry: SentrySettings | None = None
     postgres: PostgresSettings
     redis: RedisSettings
+    ton_client: TonClientSettings
     telegram_bot: TelegramSettings
     hamster: HamsterSettings | None = None
 

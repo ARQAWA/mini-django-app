@@ -52,12 +52,13 @@ django-create-su:
 	@python3 manage.py createsuperuser
 
 django-uvicorn-run:
-	@uvicorn "app.core.asgi:application" \
+	@uvicorn "app.core.asgi:app" \
 		--host "0.0.0.0" \
 		--loop uvloop \
 		--http httptools \
 		--lifespan off \
-		--interface asgi3
+		--interface asgi3 \
+		--log-level critical
 
 run-django: django-init django-uvicorn-run
 
@@ -66,6 +67,9 @@ run-tg-bot:
 
 run-hamster:
 	@python3 -m app.hamster.main
+
+run-tap-robotics-hamster:
+	@python3 -m app.tap_robotics.hamster_kombat
 
 deploy:
 	@echo "Deploying to production"

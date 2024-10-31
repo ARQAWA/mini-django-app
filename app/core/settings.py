@@ -9,8 +9,6 @@ DEBUG = envs.is_local
 
 ALLOWED_HOSTS = [host_ for host in envs.allowed_hosts.split(",") if (host_ := host.strip())]
 
-# Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -18,12 +16,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "app.users",
-    # "corsheaders",
+    "app.core.apps.core",
+    "app.core.apps.stats",
+    "app.core.apps.games",
 ]
 
 MIDDLEWARE = [
-    # "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -51,9 +49,6 @@ TEMPLATES = [
     },
 ]
 
-# Database
-# https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 if envs.postgres:
     DATABASES = {
         "default": {
@@ -76,9 +71,6 @@ else:
             "NAME": BASE_DIR / ".." / "db.sqlite3",
         },
     }
-
-# Password validation
-# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -104,3 +96,21 @@ STATIC_URL = "static/"
 STATIC_ROOT = "./static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+if envs.is_local:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+            },
+        },
+        "loggers": {
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+            },
+        },
+    }

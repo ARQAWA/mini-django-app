@@ -1,8 +1,8 @@
 from typing import cast
 
-from app.core.clients.redis_ import redis_client
 from app.core.common.singleton import SingletonMeta
 from app.core.envs import envs
+from app.core.libs.redis_ import redis_client
 
 
 class WebAuthRepo(metaclass=SingletonMeta):
@@ -14,18 +14,14 @@ class WebAuthRepo(metaclass=SingletonMeta):
     def __init__(self) -> None:
         self._redis_client = redis_client
 
-    async def set_access_token(self, access_token: bytes, user_obj_string: bytes) -> None:
+    async def set_access_token(self, access_token: bytes, user_id: int) -> None:
         """
         Запись access токена в Redis.
 
         :param access_token: access токен
-        :param user_obj_string: строка с данными пользователя
+        :param user_id: идентификатор пользователя
         """
-        await self._redis_client.set(
-            self._access_key + access_token.decode(),
-            user_obj_string,
-            ex=envs.auth.access_token_ttl,
-        )
+        await self._redis_client.set(self._access_key + access_token.decode(), user_id, ex=envs.auth.access_token_ttl)
 
     async def get_user_by_access_token(self, access_token: bytes) -> bytes | None:
         """

@@ -3,7 +3,6 @@ import string
 import orjson
 from aiogram.types import User
 
-from app.core.clients.redis_ import redis_client
 from app.core.common.executors import syncp, synct
 from app.core.common.gen_random_string import sync_get_rand_string
 from app.core.common.singleton import SingletonMeta
@@ -14,7 +13,6 @@ class TgAuthService(metaclass=SingletonMeta):
     """Сервис авторизации в телеграме."""
 
     def __init__(self) -> None:
-        self._redis_client = redis_client
         self._tg_auth_repo = TgAuthRepo()
         self._symbols = string.ascii_letters + string.digits + "#+-.:@_|"
 

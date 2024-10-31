@@ -1,16 +1,13 @@
 import asyncio
+from typing import Callable
 
-import sentry_sdk
 from aiogram import Bot, Dispatcher
-from aiogram.exceptions import TelegramNetworkError
-from aiogram.filters import Command, CommandStart
-from aiogram.types import (
-    Message,
-)
 from loguru import logger
 
 from app.core.envs import envs
-from app.core.services.tg_auth import TgAuthService
+from app.core.libs.shutdown_container import shutdown_container
+from app.tg_bot.handlers.auth_code import msg_auth_code
+from app.tg_bot.handlers.start import msg_start
 
 
 class MiniAppHolderBot:
@@ -19,54 +16,21 @@ class MiniAppHolderBot:
     def __init__(self) -> None:
         self._bot = Bot(envs.telegram_bot.token)
         self._dispatcher = Dispatcher()
-        self._setup_handlers()
-        self._tg_auth_svc = TgAuthService()
+
+        self.__register_handler(msg_start)
+        self.__register_handler(msg_auth_code)
 
     async def bootstrap(self) -> None:
         """Запуск бота."""
-        logger.debug("Запуск бота-держателя мини-приложения.")
-        await self._dispatcher.start_polling(self._bot, polling_timeout=30)
+        try:
+            logger.debug("Запуск бота-держателя мини-приложения.")
+            await self._dispatcher.start_polling(self._bot, polling_timeout=30)
+        finally:
+            await shutdown_container.shutdown()
 
-    def _setup_handlers(self) -> None:
-        """Настройка обработчиков."""
-
-        @self._dispatcher.message(CommandStart())
-        async def start(message: Message) -> None:
-            """Обработчик команды /start."""
-            if not message.from_user or message.from_user.is_bot:
-                return
-
-            while True:
-                try:
-                    await self._bot.send_message(
-                        message.chat.id,
-                        "WAZZUP! Send /auth_code to get the code.",
-                        request_timeout=5,
-                    )
-                    break
-                except TelegramNetworkError as err:
-                    sentry_sdk.capture_exception(err)
-                    logger.error(f"Ошибка при отправке сообщения: {err}")
-
-        @self._dispatcher.message(Command("auth_code"))
-        async def code(message: Message) -> None:
-            """Обработчик команды /desktop_code."""
-            if not message.from_user or message.from_user.is_bot:
-                return
-
-            answer = await self._tg_auth_svc.get_auth_hash(message.from_user)
-            while True:
-                try:
-                    await self._bot.send_message(
-                        message.chat.id,
-                        f"The code is valid for 30 seconds:\n\n`{answer}`",
-                        parse_mode="MarkdownV2",
-                        request_timeout=5,
-                    )
-                    break
-                except TelegramNetworkError as err:
-                    sentry_sdk.capture_exception(err)
-                    logger.error(f"Ошибка при отправке сообщения: {err}")
+    def __register_handler(self, func: Callable[[Bot, Dispatcher], None]) -> None:
+        """Регистрация обработчика."""
+        func(self._bot, self._dispatcher)
 
 
 if __name__ == "__main__":

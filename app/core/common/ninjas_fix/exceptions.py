@@ -4,10 +4,12 @@ from typing import Any
 import orjson
 import sentry_sdk
 from django.http import HttpRequest, HttpResponse
+from loguru import logger
 from ninja import NinjaAPI
 from ninja.errors import ValidationError
 
 from app.core.common.error import ApiError
+from app.core.envs import envs
 
 
 def setup_exception_handlers(api: NinjaAPI) -> None:
@@ -17,8 +19,7 @@ def setup_exception_handlers(api: NinjaAPI) -> None:
     @api.exception_handler(ApiError)
     def api_error(request: HttpRequest, err: ApiError) -> HttpResponse:
         if err.with_sentry:
-            sentry_sdk.capture_exception(err)
-
+            __capture_exc(err)
         return __get_response(err.status, err.message, err.details)
 
     # noinspection PyUnusedLocal
@@ -29,7 +30,7 @@ def setup_exception_handlers(api: NinjaAPI) -> None:
     # noinspection PyUnusedLocal
     @api.exception_handler(Exception)
     def internal_error(request: HttpRequest, err: Exception) -> HttpResponse:
-        sentry_sdk.capture_exception(err)
+        __capture_exc(err)
         return __get_response(HTTPStatus.INTERNAL_SERVER_ERROR, HTTPStatus.INTERNAL_SERVER_ERROR.phrase)
 
 
@@ -46,7 +47,6 @@ def __get_response(
                     "message": message,
                     "details": details,
                 },
-                "result": None,
             },
             default=str,
         ),
@@ -54,3 +54,11 @@ def __get_response(
         content_type="application/json",
         charset="utf-8",
     )
+
+
+def __capture_exc(err: Exception) -> None:
+    """Отправка ошибки в Sentry."""
+    if envs.is_local:
+        logger.error(err)
+    else:
+        sentry_sdk.capture_exception(err)
